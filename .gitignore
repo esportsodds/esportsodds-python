@@ -1,0 +1,15 @@
+# Build and tooling artifacts. This file ships with the public mirror, and it also covers the
+# monorepo copy (the root .gitignore only knows model-lab's Python artifacts).
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.DS_Store

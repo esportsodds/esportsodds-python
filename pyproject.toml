@@ -1,0 +1,114 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "esportsodds"
+dynamic = ["version"]
+description = "Python client for the esportsodds.gg CS2 (Counter-Strike 2) match data and stats API."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Sellframe Ltd" }]
+keywords = [
+    "cs2",
+    "counter-strike",
+    "counter-strike-2",
+    "csgo",
+    "esports",
+    "esports-data",
+    "esports-api",
+    "cs2-api",
+    "cs2-stats",
+    "match-data",
+    "api-client",
+    "sdk",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+# Standard library only at runtime, on purpose: nothing to resolve, nothing to clash with the
+# `requests` or `httpx` a project already pins.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "build>=1.2",
+    "twine>=6.1",
+]
+
+[project.urls]
+Homepage = "https://esportsodds.gg/cs2-api"
+Documentation = "https://docs.esportsodds.gg/docs"
+Repository = "https://github.com/esportsodds/esportsodds-python"
+Changelog = "https://github.com/esportsodds/esportsodds-python/blob/main/CHANGELOG.md"
+Issues = "https://github.com/esportsodds/esportsodds-python/issues"
+
+[tool.hatch.version]
+path = "src/esportsodds/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/esportsodds"]
+
+# Without only-include, hatchling puts everything in the project directory into the source
+# distribution. List what it is for instead: the package, its tests, the examples and the
+# top-level documents. Anything else in a working copy (helper scripts, editor files) stays out.
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "src",
+    "tests",
+    "examples",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+]
+exclude = ["tests/contract"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+# A ResourceWarning (an unclosed socket or response) is a bug in a client library, so it fails
+# the run instead of scrolling past.
+filterwarnings = ["error"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "B", "UP", "SIM", "C4", "PIE", "PT", "RUF", "S", "T20", "ARG", "PERF", "N",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "S108", "S310", "T201", "ARG001", "ARG002", "PT011"]
+"examples/**" = ["T201"]
+"scripts/**" = ["T201"]  # command-line tools whose job is to print
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unreachable = true
+files = ["src", "tests", "examples"]
+
+# The WebSocket example imports the optional `websockets` package, which this project does not
+# depend on; type-check the example whether or not it happens to be installed.
+[[tool.mypy.overrides]]
+module = ["websockets", "websockets.*"]
+ignore_missing_imports = true
