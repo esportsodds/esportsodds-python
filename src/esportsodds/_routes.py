@@ -118,17 +118,33 @@ _TABLE: tuple[Route, ...] = (
     Route("teams.form", "listTeamForm", "GET", f"{_G}/teams/{{id}}/form", ("limit",), "page"),
     Route(
         "teams.ratings", "listTeamRatings", "GET", f"{_G}/teams/{{id}}/ratings",
-        ("limit",), "page",
+        ("limit", "window"), "page",
     ),
-    Route("teams.maps", "listTeamMaps", "GET", f"{_G}/teams/{{id}}/maps", (), "page"),
+    Route(
+        "teams.maps", "listTeamMaps", "GET", f"{_G}/teams/{{id}}/maps",
+        ("window", "era", "active", "include"), "page",
+    ),
     Route(
         "teams.round_stats", "getTeamRoundStats", "GET", f"{_G}/teams/{{id}}/round-stats",
-        (), "item",
+        ("window",), "item",
+    ),
+    Route(
+        "teams.vetoes", "getTeamVetoes", "GET", f"{_G}/teams/{{id}}/vetoes",
+        ("window", "era"), "item",
+    ),
+    Route(
+        "teams.results", "listTeamResults", "GET", f"{_G}/teams/{{id}}/results",
+        ("limit", "opponent"), "page",
+    ),
+    Route(
+        "teams.rivals", "listTeamRivals", "GET", f"{_G}/teams/{{id}}/rivals",
+        ("limit", "min_meetings", "window"), "page",
     ),
     Route(
         "teams.roster_history", "listTeamRosterHistory", "GET", f"{_G}/teams/{{id}}/roster-history",
         ("limit",), "page",
     ),
+    Route("teams.players", "listTeamPlayers", "GET", f"{_G}/teams/{{id}}/players", (), "item"),
     Route(
         "tournaments.list", "listTournaments", "GET", f"{_G}/tournaments",
         ("slug", "status", "tier", "event_type", "region", "year", "limit", "cursor"),
@@ -146,8 +162,34 @@ _TABLE: tuple[Route, ...] = (
     Route("players.get", "getPlayer", "GET", f"{_G}/players/{{id}}", ("include", "rank"), "item"),
     Route("players.career", "getPlayerCareer", "GET", f"{_G}/players/{{id}}/stats", (), "item"),
     Route(
+        "players.performance", "getPlayerPerformance", "GET", f"{_G}/players/{{id}}/performance",
+        (), "item",
+    ),
+    Route("players.maps", "listPlayerMaps", "GET", f"{_G}/players/{{id}}/maps", (), "item"),
+    Route(
+        "players.matches", "listPlayerMatches", "GET", f"{_G}/players/{{id}}/matches",
+        ("limit",), "page",
+    ),
+    Route("players.teams", "listPlayerTeams", "GET", f"{_G}/players/{{id}}/teams", (), "item"),
+    Route(
+        "players.weapons", "getPlayerWeapons", "GET", f"{_G}/players/{{id}}/weapons", (), "item",
+    ),
+    Route(
         "rankings.list", "listRankings", "GET", f"{_G}/rankings",
-        ("type", "region", "role", "sort", "limit"), "page",
+        ("type", "region", "role", "sort", "delta_days", "include", "limit"), "page",
+    ),
+    Route(
+        "rankings.history", "listRankingsHistory", "GET", f"{_G}/rankings/history",
+        ("weeks", "top"), "page",
+    ),
+    Route(
+        "rankings.round_stats", "listRankingsRoundStats", "GET", f"{_G}/rankings/round-stats",
+        ("window", "limit"), "page",
+    ),
+    Route("maps.list", "listMaps", "GET", f"{_G}/maps", ("window", "era"), "page"),
+    Route(
+        "maps.teams", "listMapTeams", "GET", f"{_G}/maps/{{id}}/teams",
+        ("window", "era", "limit"), "page",
     ),
     Route("coverage.list", "getCoverage", "GET", f"{_G}/coverage", (), "page"),
     Route("model.metrics", "getModelMetrics", "GET", f"{_G}/model/metrics", (), "page"),

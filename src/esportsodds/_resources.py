@@ -34,6 +34,7 @@ if TYPE_CHECKING:
 __all__ = [
     "DEFAULT_CHANGE_OVERLAP",
     "Coverage",
+    "Maps",
     "Matches",
     "Model",
     "Odds",
@@ -73,7 +74,10 @@ def _ident(value: object, what: str) -> str:
         return str(value)
     if isinstance(value, str) and value.strip() and value not in (".", ".."):
         return value
-    shape = "id (UUID)" if what == "match" else "id (UUID) or slug"  # matches have no slug
+    shape = {
+        "match": "id (UUID)",  # matches have no slug
+        "map": "map name such as dust2",  # a map has no UUID
+    }.get(what, "id (UUID) or slug")
     raise ValueError(f"{what} must be a non-empty {shape}, got {value!r}")
 
 
@@ -651,7 +655,8 @@ class Odds(_Namespace):
 
 
 class Teams(_Namespace):
-    """Teams, with their form, ratings, maps, round stats and roster history."""
+    """Teams, with their form, results, ratings, maps, vetoes, rivals, round stats and roster
+    history."""
 
     def list(
         self,
@@ -744,25 +749,139 @@ class Teams(_Namespace):
         """A team's recent completed results, newest first (default 10, maximum 50)."""
         return self._c._page("teams.form", _ident(team, "team"), limit=limit)
 
-    def ratings(self, team: IdLike, *, limit: int | None = None) -> Page:
-        """A team's Glicko-2 rating history, one point per played match, oldest first (the most
-        recent ``limit`` points; default 30, maximum 200)."""
-        return self._c._page("teams.ratings", _ident(team, "team"), limit=limit)
+    def ratings(self, team: IdLike, *, limit: int | None = None, window: str | None = None) -> Page:
+        """A team's Glicko-2 rating history, one point per played match, oldest first, each with
+        the ``match_id`` that moved it (the most recent ``limit`` points; default 30, maximum 1000).
 
-    def maps(self, team: IdLike) -> Page:
-        """A team's win and loss record per map."""
-        return self._c._page("teams.maps", _ident(team, "team"))
+        Args:
+            team: The team's id or slug.
+            limit: How many points to return.
+            window: A trailing span such as ``"12m"`` (whole months, up to ``"60m"``) or ``"all"``.
+                Naming one returns that whole span and raises the default ``limit`` to the maximum.
+        """
+        return self._c._page("teams.ratings", _ident(team, "team"), limit=limit, window=window)
 
-    def round_stats(self, team: IdLike) -> dict[str, Any]:
+    def maps(
+        self,
+        team: IdLike,
+        *,
+        window: str | None = None,
+        era: str | None = None,
+        active: bool = False,
+        include: Multi | None = None,
+    ) -> Page:
+        """A team's win and loss record per map, best win rate first.
+
+        With no arguments this covers the team's whole history, including maps that have left the
+        pool. The arguments narrow it to what is current.
+
+        Args:
+            team: The team's id or slug.
+            window: A trailing span such as ``"6m"`` (whole months, up to ``"60m"``) or ``"all"``
+                (the default).
+            era: ``cs2`` keeps Counter-Strike 2 matches only; ``all`` (the default) keeps every one.
+            active: Only the maps in today's Active Duty pool.
+            include: ``detail`` adds each map's last-played date, pool membership and the team's
+                round record by side and in pistol rounds.
+        """
+        return self._c._page(
+            "teams.maps",
+            _ident(team, "team"),
+            window=window,
+            era=era,
+            active="true" if active else None,  # this flag is spelled out, unlike `rank`
+            include=include,
+        )
+
+    def round_stats(self, team: IdLike, *, window: str | None = None) -> dict[str, Any]:
         """A team's round-level playstyle profile (side win rates, pistol, opening duels, eco,
-        clutch), each a percentage or null when there is no sample."""
-        return self._c._item("teams.round_stats", _ident(team, "team"))
+        clutch), each a percentage or null when there is no sample.
+
+        Args:
+            team: The team's id or slug.
+            window: A trailing span such as ``"6m"`` (whole months, up to ``"60m"``) or ``"all"``
+                (the default).
+        """
+        return self._c._item("teams.round_stats", _ident(team, "team"), window=window)
+
+    def vetoes(
+        self, team: IdLike, *, window: str | None = None, era: str | None = None
+    ) -> dict[str, Any]:
+        """How a team chooses maps: for each map, its own picks, bans, first bans and deciders, and
+        whether it is a permaban. Read every share against ``veto_matches``, the matches with a
+        recorded veto, not against ``matches``.
+
+        Args:
+            team: The team's id or slug.
+            window: A trailing span such as ``"6m"`` (the default; whole months up to ``"60m"``) or
+                ``"all"``.
+            era: ``cs2`` or ``all`` (the default).
+        """
+        return self._c._item("teams.vetoes", _ident(team, "team"), window=window, era=era)
+
+    def results(
+        self, team: IdLike, *, limit: int | None = None, opponent: IdLike | None = None
+    ) -> Page:
+        """A team's completed, decided matches, newest first, with every played map's score and
+        both teams' ratings going into the match (default 20, maximum 100).
+
+        Args:
+            team: The team's id or slug.
+            limit: How many results to return.
+            opponent: Only the matches against this team (id or slug).
+        """
+        return self._c._page(
+            "teams.results",
+            _ident(team, "team"),
+            limit=limit,
+            opponent=None if opponent is None else _ident(opponent, "opponent"),
+        )
+
+    def rivals(
+        self,
+        team: IdLike,
+        *,
+        limit: int | None = None,
+        min_meetings: int | None = None,
+        window: str | None = None,
+    ) -> Page:
+        """The opponents a team has met most often, most meetings first, with the head-to-head, the
+        last ten meetings and the average rating gap (default 5, maximum 20).
+
+        Args:
+            team: The team's id or slug.
+            limit: How many rivals to return.
+            min_meetings: Fewest meetings that make an opponent a rival, 1 to 50 (default 2).
+            window: A trailing span such as ``"36m"`` (the default; whole months up to
+                ``"120m"``) or ``"all"``.
+        """
+        return self._c._page(
+            "teams.rivals",
+            _ident(team, "team"),
+            limit=limit,
+            min_meetings=min_meetings,
+            window=window,
+        )
 
     def roster_history(self, team: IdLike, *, limit: int | None = None) -> Page:
         """The five players a team fielded in each recent completed match, newest first, with the
         roster-change facts (default 20, maximum 100). Read ``continuity`` before interpreting
         ``changed_count``."""
         return self._c._page("teams.roster_history", _ident(team, "team"), limit=limit)
+
+    def players(self, team: IdLike) -> dict[str, Any]:
+        """The players in a team's newest completed match with stats, usually five. Each comes with
+        their own figures over the last 12 months (the same as `players.performance`), whether they
+        have a player page, and when their current run with the team began.
+
+        ``as_of`` is that match's date; a team with no such match returns ``as_of: null`` and no
+        players. A figure from fewer than 10 recorded maps is null. Players are identified by
+        nickname, country and role only.
+
+        Args:
+            team: The team's id or slug.
+        """
+        return self._c._item("teams.players", _ident(team, "team"))
 
 
 # ---------------------------------------------------------------------------------------------
@@ -883,7 +1002,8 @@ class Tournaments(_Namespace):
 
 
 class Players(_Namespace):
-    """Players and their career totals."""
+    """Players: career totals, last-12-month figures with percentiles, maps, recent matches, team
+    history and weapons. A player is identified by nickname, country and role only."""
 
     def list(
         self,
@@ -985,6 +1105,65 @@ class Players(_Namespace):
         """A player's all-time career totals and averages (averages are null with no rated maps)."""
         return self._c._item("players.career", _ident(player, "player"))
 
+    def performance(self, player: IdLike) -> dict[str, Any]:
+        """A player's figures over their recorded maps in the last 12 months, each with its
+        percentile among every player who has a player page.
+
+        A recorded map is one played to a result on a competitive map, in a completed
+        Counter-Strike 2 match that was not a walkover, where the player's line is complete.
+        Every rate is a ratio of sums over the maps that carry its inputs, and ``n`` is how many
+        maps a figure uses. A figure from fewer than 10 maps is null, and so is its percentile.
+
+        Read ``level`` (``established``, ``listed`` or ``none``) and each ``percentile`` as the API
+        returns them: ``definition`` and ``population.level_definition`` quote every rule, so
+        quote them rather than restate them.
+
+        Args:
+            player: The player's id or slug.
+        """
+        return self._c._item("players.performance", _ident(player, "player"))
+
+    def maps(self, player: IdLike) -> dict[str, Any]:
+        """A player's figures on each competitive map they have a recorded map on in the last
+        12 months, most played first: maps played, ADR and KAST weighted by rounds, and kills per
+        death. A figure from fewer than 10 maps on that map is null.
+
+        Args:
+            player: The player's id or slug.
+        """
+        return self._c._item("players.maps", _ident(player, "player"))
+
+    def matches(self, player: IdLike, *, limit: int | None = None) -> Page:
+        """A player's recent completed matches, newest first, with the team they played for, the
+        opponent, the series score from their side, the tournament and their own kills, deaths and
+        ADR. Walkovers and matches before Counter-Strike 2 are left out. Not paginated.
+
+        Args:
+            player: The player's id or slug.
+            limit: How many matches to return (default 10, maximum 25).
+        """
+        return self._c._page("players.matches", _ident(player, "player"), limit=limit)
+
+    def teams(self, player: IdLike) -> dict[str, Any]:
+        """A player's team history as stints, newest first. A stint is a run of consecutive matches
+        for one team; a run of fewer than three matches is left out unless it is the current one.
+        The newest stint is ``current`` only while its last match is recent.
+
+        Args:
+            player: The player's id or slug.
+        """
+        return self._c._item("players.teams", _ident(player, "player"))
+
+    def weapons(self, player: IdLike) -> dict[str, Any]:
+        """A player's weapon and hit-group totals over their matches in the last 12 months. The
+        eight weapons with the most kills are listed and the rest folded into one ``other`` row.
+        Weapon data is recorded per match, never per map; a player with none gets empty lists.
+
+        Args:
+            player: The player's id or slug.
+        """
+        return self._c._item("players.weapons", _ident(player, "player"))
+
 
 # ---------------------------------------------------------------------------------------------
 # Rankings, coverage, model
@@ -992,7 +1171,8 @@ class Players(_Namespace):
 
 
 class Rankings(_Namespace):
-    """The team and player leaderboards over a rolling three-month window."""
+    """The team and player leaderboards over a rolling three-month window, the team board's
+    history, and the round-level figures of its top teams."""
 
     def list(
         self,
@@ -1001,6 +1181,8 @@ class Rankings(_Namespace):
         region: str | None = None,
         role: str | None = None,
         sort: str | None = None,
+        delta_days: int | None = None,
+        include: Multi | None = None,
         limit: int | None = None,
     ) -> Page:
         """A leaderboard. Not paginated: ``limit`` truncates the board and ``next_cursor`` is
@@ -1013,11 +1195,84 @@ class Rankings(_Namespace):
             role: One player role (with ``type="player"``).
             sort: ``rank`` (default), ``value`` or ``name``; prefix ``-`` to reverse. Re-sorting
                 reorders the rows but never changes their ``rank``.
+            delta_days: Days back that a team's ``rank_delta`` is measured against, 1 to 90
+                (default 7).
+            include: ``trend`` adds, to each team row, the board value at each of the last twelve
+                weekly marks, oldest first.
             limit: Rows to return (default 100, maximum 500).
         """
         return self._c._page(
-            "rankings.list", None, type=type, region=region, role=role, sort=sort, limit=limit
+            "rankings.list",
+            None,
+            type=type,
+            region=region,
+            role=role,
+            sort=sort,
+            delta_days=delta_days,
+            include=include,
+            limit=limit,
         )
+
+    def history(self, *, weeks: int | None = None, top: int | None = None) -> Page:
+        """The top of the team board at each of the last ``weeks`` weekly marks, oldest first, the
+        newest being now. Always exactly ``weeks`` snapshots; a mark with no eligible team has an
+        empty ``entries`` list.
+
+        Args:
+            weeks: How many weekly snapshots, 1 to 52 (default 13).
+            top: How many teams in each snapshot, 1 to 25 (default 10).
+        """
+        return self._c._page("rankings.history", None, weeks=weeks, top=top)
+
+    def round_stats(self, *, window: str | None = None, limit: int | None = None) -> Page:
+        """The round-level figures of ``teams.round_stats`` for the top teams of the board, in
+        board order, each with its team and rank: one request in place of one per team (default 30,
+        maximum 100).
+
+        Args:
+            window: A trailing span of whole months from ``"1m"`` to ``"12m"`` (default ``"6m"``);
+                there is no ``"all"``.
+            limit: How many top teams to return.
+        """
+        return self._c._page("rankings.round_stats", None, window=window, limit=limit)
+
+
+class Maps(_Namespace):
+    """League-wide figures for each competitive map, and how each team fares on one map."""
+
+    def list(self, *, window: str | None = None, era: str | None = None) -> Page:
+        """Each competitive map's league-wide figures: maps played, average rounds, rounds played
+        and won on each side, and the bans and picks recorded in vetoes. Most played first. Read a
+        map's bans and picks against its own ``veto_matches``.
+
+        Args:
+            window: A trailing span of whole months from ``"1m"`` to ``"12m"`` (default ``"6m"``);
+                there is no ``"all"``.
+            era: ``cs2`` or ``all`` (the default).
+        """
+        return self._c._page("maps.list", None, window=window, era=era)
+
+    def teams(
+        self,
+        map: str,
+        *,
+        window: str | None = None,
+        era: str | None = None,
+        limit: int | None = None,
+    ) -> Page:
+        """How each team fares on one map: maps played and won, its own picks and bans of the
+        map, and whether it is a permaban. A team is listed with at least 10 maps played on the
+        map or at least 10 picks plus bans of it (default 100, maximum 200).
+
+        Args:
+            map: The map's name, such as ``"dust2"`` (the ``de_`` prefix is optional). An unknown
+                name raises `NotFoundError`.
+            window: A trailing span such as ``"6m"`` (the default; whole months up to ``"60m"``)
+                or ``"all"``.
+            era: ``cs2`` or ``all`` (the default).
+            limit: How many teams to return.
+        """
+        return self._c._page("maps.teams", _ident(map, "map"), window=window, era=era, limit=limit)
 
 
 class Coverage(_Namespace):

@@ -29,7 +29,17 @@ from ._errors import (
 )
 from ._headers import Headers
 from ._pagination import Page
-from ._resources import Coverage, Matches, Model, Odds, Players, Rankings, Teams, Tournaments
+from ._resources import (
+    Coverage,
+    Maps,
+    Matches,
+    Model,
+    Odds,
+    Players,
+    Rankings,
+    Teams,
+    Tournaments,
+)
 from ._routes import CSV_PARAMS, ROUTES, Route
 from ._time import parse_rfc3339, to_query_value
 from ._transport import Transport, TransportRequest, TransportResponse, UrllibTransport
@@ -180,6 +190,7 @@ class Client:
     tournaments: Tournaments
     players: Players
     rankings: Rankings
+    maps: Maps
     coverage: Coverage
     model: Model
 
@@ -213,6 +224,7 @@ class Client:
         self.tournaments = Tournaments(self)
         self.players = Players(self)
         self.rankings = Rankings(self)
+        self.maps = Maps(self)
         self.coverage = Coverage(self)
         self.model = Model(self)
 

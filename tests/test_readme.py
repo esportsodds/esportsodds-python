@@ -286,7 +286,7 @@ def test_the_methods_table_lists_every_route_exactly_once() -> None:
         assert match, call
         keys.append(match.group(1))
     assert sorted(keys) == sorted(ROUTES)
-    assert len(keys) == len(set(keys)) == len(ROUTES) == 31
+    assert len(keys) == len(set(keys)) == len(ROUTES) == 44
 
 
 def test_each_row_has_the_routes_verb_and_path_and_return_type() -> None:

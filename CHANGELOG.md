@@ -7,6 +7,31 @@ the API; the change will be listed here first.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-11
+
+### Added
+
+- Team analysis: `teams.results()` (recent results with every map's score and both teams' ratings going
+  into the match), `teams.rivals()` (the opponents a team meets most, with the head-to-head and the
+  average rating gap) and `teams.vetoes()` (a team's own picks, bans, first bans and deciders per map, with
+  a permaban flag).
+- Maps: `maps.list()` (league-wide figures for each competitive map) and `maps.teams(map)` (how each team
+  fares on, and chooses around, one map).
+- Rankings: `rankings.history()` (the team board at each of the last weekly marks) and
+  `rankings.round_stats()` (round-level figures for the top teams, in board order).
+- Players: `players.performance()` (last-12-month figures over recorded maps, each with its percentile
+  among the players who have a player page), `players.maps()`, `players.matches()` (recent matches, newest
+  first), `players.teams()` (team history as stints) and `players.weapons()` (weapon and hit-group
+  totals), plus `teams.players()` (the players in a team's newest match with stats, with their
+  last-12-month figures). A figure from fewer than 10 recorded maps is `null`, and so is its percentile.
+- `window`, `era`, `active` and `include="detail"` on `teams.maps()`; `window` on `teams.ratings()` and
+  `teams.round_stats()`; `delta_days` and `include="trend"` on `rankings.list()`.
+
+### Changed
+
+- `teams.ratings()` accepts a `limit` of up to 1000 (it was 200), and each point carries the `match_id`
+  that moved it.
+
 ## [0.1.0] - 2026-10-08
 
 ### Added

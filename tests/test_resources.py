@@ -182,22 +182,51 @@ CASES = [
     ),
     Case(
         "teams.ratings",
-        lambda c: c.teams.ratings(TEAM, limit=5),
+        lambda c: c.teams.ratings(TEAM, limit=5, window="12m"),
         "GET",
         f"/v1/cs2/teams/{TEAM}/ratings",
-        {"limit": "5"},
+        {"limit": "5", "window": "12m"},
         "page",
     ),
     Case(
-        "teams.maps", lambda c: c.teams.maps(TEAM), "GET", f"/v1/cs2/teams/{TEAM}/maps", {}, "page"
+        "teams.maps",
+        lambda c: c.teams.maps(TEAM, window="6m", era="cs2", active=True, include=["detail"]),
+        "GET",
+        f"/v1/cs2/teams/{TEAM}/maps",
+        {"window": "6m", "era": "cs2", "active": "true", "include": "detail"},
+        "page",
     ),
     Case(
         "teams.round_stats",
-        lambda c: c.teams.round_stats(TEAM),
+        lambda c: c.teams.round_stats(TEAM, window="6m"),
         "GET",
         f"/v1/cs2/teams/{TEAM}/round-stats",
-        {},
+        {"window": "6m"},
         "item",
+    ),
+    Case(
+        "teams.vetoes",
+        lambda c: c.teams.vetoes(TEAM, window="all", era="cs2"),
+        "GET",
+        f"/v1/cs2/teams/{TEAM}/vetoes",
+        {"window": "all", "era": "cs2"},
+        "item",
+    ),
+    Case(
+        "teams.results",
+        lambda c: c.teams.results(TEAM, limit=10, opponent=OPPONENT),
+        "GET",
+        f"/v1/cs2/teams/{TEAM}/results",
+        {"limit": "10", "opponent": OPPONENT},
+        "page",
+    ),
+    Case(
+        "teams.rivals",
+        lambda c: c.teams.rivals(TEAM, limit=3, min_meetings=4, window="36m"),
+        "GET",
+        f"/v1/cs2/teams/{TEAM}/rivals",
+        {"limit": "3", "min_meetings": "4", "window": "36m"},
+        "page",
     ),
     Case(
         "teams.roster_history",
@@ -206,6 +235,14 @@ CASES = [
         f"/v1/cs2/teams/{TEAM}/roster-history",
         {"limit": "5"},
         "page",
+    ),
+    Case(
+        "teams.players",
+        lambda c: c.teams.players(TEAM),
+        "GET",
+        f"/v1/cs2/teams/{TEAM}/players",
+        {},
+        "item",
     ),
     # tournaments
     Case(
@@ -282,15 +319,102 @@ CASES = [
         {},
         "item",
     ),
+    Case(
+        "players.performance",
+        lambda c: c.players.performance(PLAYER),
+        "GET",
+        f"/v1/cs2/players/{PLAYER}/performance",
+        {},
+        "item",
+    ),
+    Case(
+        "players.maps",
+        lambda c: c.players.maps(PLAYER),
+        "GET",
+        f"/v1/cs2/players/{PLAYER}/maps",
+        {},
+        "item",
+    ),
+    Case(
+        "players.matches",
+        lambda c: c.players.matches(PLAYER, limit=5),
+        "GET",
+        f"/v1/cs2/players/{PLAYER}/matches",
+        {"limit": "5"},
+        "page",
+    ),
+    Case(
+        "players.teams",
+        lambda c: c.players.teams(PLAYER),
+        "GET",
+        f"/v1/cs2/players/{PLAYER}/teams",
+        {},
+        "item",
+    ),
+    Case(
+        "players.weapons",
+        lambda c: c.players.weapons(PLAYER),
+        "GET",
+        f"/v1/cs2/players/{PLAYER}/weapons",
+        {},
+        "item",
+    ),
     # leaderboard and meta
     Case(
         "rankings.list",
         lambda c: c.rankings.list(
-            type="player", region="Europe", role="AWP", sort="-value", limit=10
+            type="team",
+            region="Europe",
+            role="AWP",
+            sort="-value",
+            delta_days=14,
+            include=["trend"],
+            limit=10,
         ),
         "GET",
         "/v1/cs2/rankings",
-        {"type": "player", "region": "Europe", "role": "AWP", "sort": "-value", "limit": "10"},
+        {
+            "type": "team",
+            "region": "Europe",
+            "role": "AWP",
+            "sort": "-value",
+            "delta_days": "14",
+            "include": "trend",
+            "limit": "10",
+        },
+        "page",
+    ),
+    Case(
+        "rankings.history",
+        lambda c: c.rankings.history(weeks=13, top=10),
+        "GET",
+        "/v1/cs2/rankings/history",
+        {"weeks": "13", "top": "10"},
+        "page",
+    ),
+    Case(
+        "rankings.round_stats",
+        lambda c: c.rankings.round_stats(window="6m", limit=30),
+        "GET",
+        "/v1/cs2/rankings/round-stats",
+        {"window": "6m", "limit": "30"},
+        "page",
+    ),
+    # maps
+    Case(
+        "maps.list",
+        lambda c: c.maps.list(window="6m", era="cs2"),
+        "GET",
+        "/v1/cs2/maps",
+        {"window": "6m", "era": "cs2"},
+        "page",
+    ),
+    Case(
+        "maps.teams",
+        lambda c: c.maps.teams("dust2", window="12m", era="all", limit=50),
+        "GET",
+        "/v1/cs2/maps/dust2/teams",
+        {"window": "12m", "era": "all", "limit": "50"},
         "page",
     ),
     Case("coverage.list", lambda c: c.coverage.list(), "GET", "/v1/cs2/coverage", {}, "page"),
@@ -372,6 +496,13 @@ SAMPLES: dict[str, tuple[Any, str]] = {
     "role": ("AWP", "AWP"),
     "ids": ([PLAYER, MATCH], f"{PLAYER},{MATCH}"),
     "type": ("player", "player"),
+    "window": ("6m", "6m"),
+    "era": ("cs2", "cs2"),
+    "active": (True, "true"),  # spelled out, unlike `rank` and `latest`
+    "delta_days": (14, "14"),
+    "weeks": (13, "13"),
+    "top": (10, "10"),
+    "min_meetings": (4, "4"),
 }
 
 
@@ -431,6 +562,7 @@ def test_the_namespaces_exist() -> None:
         "tournaments",
         "players",
         "rankings",
+        "maps",
         "coverage",
         "model",
     ):
@@ -530,3 +662,31 @@ def test_no_docstring_gives_a_match_a_slug() -> None:
                 checked += 1
                 assert "slug" not in line.lower(), (method_name, line)
     assert checked >= 1, "no `match:` argument was documented, so this test checked nothing"
+
+
+def test_a_team_maps_flag_is_spelled_out_not_sent_as_a_one() -> None:
+    # `rank` and `latest` are "1" on the wire; `active` is "true" or "false" and a "1" is a 400.
+    rig = make_rig(page([]))
+    rig.client.teams.maps(TEAM, active=True)
+    assert rig.transport.query() == {"active": "true"}
+    rig = make_rig(page([]))
+    rig.client.teams.maps(TEAM, active=False)  # off is simply left out
+    assert rig.transport.query() == {}
+
+
+def test_results_resolves_an_opponent_like_any_other_team_reference() -> None:
+    rig = make_rig(page([]))
+    rig.client.teams.results(TEAM, opponent="team-b")
+    assert rig.transport.query() == {"opponent": "team-b"}
+    with pytest.raises(ValueError, match="opponent"):
+        rig.client.teams.results(TEAM, opponent=" ")
+
+
+def test_a_map_name_is_checked_before_it_reaches_the_url() -> None:
+    rig = make_rig(page([]))
+    for bad in ("", "  ", ".", ".."):
+        with pytest.raises(ValueError, match="map name"):
+            rig.client.maps.teams(bad)
+    assert rig.transport.requests == []
+    rig.client.maps.teams("de_mirage")
+    assert rig.transport.path() == "/v1/cs2/maps/de_mirage/teams"

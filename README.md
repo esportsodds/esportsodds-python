@@ -103,14 +103,27 @@ teams, players and tournaments, the slug.
 | `client.teams.ratings(team)` | `GET /v1/{game}/teams/{id}/ratings` | `Page` | The team's rating history, one point per match. |
 | `client.teams.maps(team)` | `GET /v1/{game}/teams/{id}/maps` | `Page` | The team's record on each map. |
 | `client.teams.round_stats(team)` | `GET /v1/{game}/teams/{id}/round-stats` | `dict` | Round-level playstyle rates: side win rates, pistols, opening duels. |
+| `client.teams.vetoes(team)` | `GET /v1/{game}/teams/{id}/vetoes` | `dict` | A team's own picks, bans and deciders per map, with a permaban flag. |
+| `client.teams.results(team)` | `GET /v1/{game}/teams/{id}/results` | `Page` | Recent results with every map's score and both teams' ratings going in. |
+| `client.teams.rivals(team)` | `GET /v1/{game}/teams/{id}/rivals` | `Page` | The opponents a team meets most, with the head-to-head and rating gap. |
 | `client.teams.roster_history(team)` | `GET /v1/{game}/teams/{id}/roster-history` | `Page` | The five players fielded in each recent match, with roster changes. |
+| `client.teams.players(team)` | `GET /v1/{game}/teams/{id}/players` | `dict` | The players in the team's newest match with stats, with their last-12-month figures. |
 | `client.tournaments.list()` | `GET /v1/{game}/tournaments` | `Page` | Every tournament, newest first. |
 | `client.tournaments.get(tournament)` | `GET /v1/{game}/tournaments/{id}` | `dict` | One tournament. |
 | `client.tournaments.teams(tournament)` | `GET /v1/{game}/tournaments/{id}/teams` | `Page` | The participating teams, by seed. |
 | `client.players.list()` | `GET /v1/{game}/players` | `Page` | Every player, alphabetically by nickname. |
 | `client.players.get(player)` | `GET /v1/{game}/players/{id}` | `dict` | One player. |
 | `client.players.career(player)` | `GET /v1/{game}/players/{id}/stats` | `dict` | A player's career totals and averages. |
+| `client.players.performance(player)` | `GET /v1/{game}/players/{id}/performance` | `dict` | Last-12-month figures over recorded maps, each with its percentile among players with a page. |
+| `client.players.maps(player)` | `GET /v1/{game}/players/{id}/maps` | `dict` | The player's figures on each map they have a recorded map on. |
+| `client.players.matches(player)` | `GET /v1/{game}/players/{id}/matches` | `Page` | Recent completed matches, newest first, with the player's own line. |
+| `client.players.teams(player)` | `GET /v1/{game}/players/{id}/teams` | `dict` | The player's team history as stints. |
+| `client.players.weapons(player)` | `GET /v1/{game}/players/{id}/weapons` | `dict` | Weapon and hit-group totals over the last 12 months. |
 | `client.rankings.list()` | `GET /v1/{game}/rankings` | `Page` | A team or player leaderboard over a rolling three-month window. |
+| `client.rankings.history()` | `GET /v1/{game}/rankings/history` | `Page` | The team board at each of the last weekly marks. |
+| `client.rankings.round_stats()` | `GET /v1/{game}/rankings/round-stats` | `Page` | Round-level figures for the top teams, in board order. |
+| `client.maps.list()` | `GET /v1/{game}/maps` | `Page` | League-wide figures for each competitive map. |
+| `client.maps.teams(map)` | `GET /v1/{game}/maps/{id}/teams` | `Page` | How each team fares on, and chooses around, one map. |
 | `client.coverage.list()` | `GET /v1/{game}/coverage` | `Page` | What data exists and how often it refreshes. |
 | `client.model.metrics()` | `GET /v1/{game}/model/metrics` | `Page` | Transparency metrics for the model line, per market. The model line is coming soon; the list may be empty. |
 | `client.ws_token()` | `POST /v1/{game}/ws-token` | `dict` | A 60-second ticket for the [WebSocket](#websocket-match-updates). Costs no requests. |
