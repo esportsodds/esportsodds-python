@@ -16,6 +16,9 @@ pip install esportsodds
 
 Python 3.10 or newer. No dependencies.
 
+No subscription yet? A free [sandbox key](https://docs.esportsodds.gg/docs/sandbox) reads a fixed
+sample of past matches, so you can build against real responses first.
+
 ## Quickstart
 
 ```python
@@ -38,9 +41,12 @@ Every call returns what the API sent, as ordinary dicts and lists. A list call r
 ## Your API key and the plan
 
 There is one plan: **$49 a month for 50,000 requests**, per account, counted per calendar month
-(UTC) and paid up front. There is no free tier and no trial: a key exists only for a paid account.
-Past the 50,000, requests get a `429` with the code `quota_exceeded` until the month resets, and
-this client raises `QuotaExceededError` without retrying (retrying cannot help).
+(UTC) and paid up front. There is no trial. A free [sandbox key](https://docs.esportsodds.gg/docs/sandbox)
+reads a fixed sample of past matches, up to 2,000 requests in total, with no card; current data needs
+the plan. Past the 50,000, requests get a `429` with the code `quota_exceeded` until the month
+resets, and this client raises `QuotaExceededError` without retrying (retrying cannot help). A spent
+sandbox key gets `sandbox_quota_exceeded`, raised the same way (it never resets), and a request
+outside its sample raises `PermissionDeniedError` (`sandbox_scope`, not counted).
 
 Create a key in your account after you [subscribe](https://esportsodds.gg/pricing), then keep it
 out of your code:
@@ -370,9 +376,10 @@ affiliated with or endorsed by Valve or any stats site.
 **Why not scrape?** Scraping breaks whenever a page changes and many sites forbid it. With this API
 you build without scraping HLTV or anyone else: you call stable, documented endpoints instead.
 
-**Is there a free tier?** No. There is no free tier and no trial; the plan is $49 a month for
-50,000 requests, paid up front. The [public demo](https://demo.esportsodds.gg) shows real
-responses without an account.
+**Is there a free tier?** Not for current data. There is no trial; the plan is $49 a month for
+50,000 requests, paid up front. A free [sandbox key](https://docs.esportsodds.gg/docs/sandbox) reads a
+fixed sample of past matches, and the [public demo](https://demo.esportsodds.gg) shows real responses
+without an account.
 
 **What does a call cost?** One request against the 50,000, whatever it returns. A bulk page, which
 carries up to 25 matches with their detail, is also one request. A walker (`iter`, `pages`,

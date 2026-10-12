@@ -7,6 +7,15 @@ the API; the change will be listed here first.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-12
+
+### Changed
+
+- README: there is now a free sandbox key, which reads a fixed sample of past matches (up to 2,000
+  requests in total, no card). The README no longer says "no free tier", points at the sandbox guide,
+  and says how this client raises the two sandbox errors (`sandbox_quota_exceeded` as
+  `QuotaExceededError`, `sandbox_scope` as `PermissionDeniedError`). No code change.
+
 ## [0.3.0] - 2026-10-12
 
 ### Changed

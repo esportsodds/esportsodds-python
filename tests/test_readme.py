@@ -159,6 +159,8 @@ def test_the_install_section_is_honest_about_pypi_and_names_the_python_floor() -
     body = FLAT["Install"]
     assert "pip install esportsodds" in body
     assert "Python 3.10 or newer" in body
+    # No subscription yet: the free sandbox key is the way to try the client (since 2026-10-12).
+    assert "[sandbox key](https://docs.esportsodds.gg/docs/sandbox)" in body
     # Before the first release the section carries ONE pre-release note (the marker publish.yml
     # refuses to release with) and the install-from-GitHub line the note points at. The release
     # checklist deletes both together, so this must hold in either state, never half of each.
@@ -223,7 +225,14 @@ def test_the_plan_is_stated_as_it_is_sold() -> None:
     assert "per account" in body
     assert "calendar month (UTC)" in body
     assert "paid up front" in body
-    assert "no free tier and no trial" in body
+    # Since 2026-10-12 there is a free sandbox key (sample data only), so "no free tier" is false:
+    # the plan has no trial, and the sandbox is named with its limits and its guide.
+    assert "There is no trial." in body
+    assert "no free tier" not in body.lower()
+    assert "A free [sandbox key](https://docs.esportsodds.gg/docs/sandbox)" in body
+    assert "fixed sample of past matches" in body
+    assert "2,000 requests in total" in body
+    assert "`sandbox_quota_exceeded`" in body
     assert "`quota_exceeded`" in body
     assert "QuotaExceededError" in body
 
@@ -800,7 +809,7 @@ FAQ_OPENINGS = {
     "Is this an official API?": "No. It is not an official ",
     "Why not scrape?": "Scraping breaks whenever a page changes and many sites forbid it.",
     "Is there a free tier?": (
-        "No. There is no free tier and no trial; the plan is $49 a month for 50,000 requests, "
+        "Not for current data. There is no trial; the plan is $49 a month for 50,000 requests, "
         "paid up front."
     ),
     "What does a call cost?": "One request against the 50,000, whatever it returns.",
@@ -851,6 +860,12 @@ def test_the_faq_says_a_bug_report_goes_to_this_repositorys_issues() -> None:
 
 def test_the_faq_free_tier_answer_points_at_the_public_demo() -> None:
     assert "[public demo](https://demo.esportsodds.gg)" in faq()["Is there a free tier?"]
+
+
+def test_the_faq_free_tier_answer_names_the_sandbox_key() -> None:
+    answer = faq()["Is there a free tier?"]
+    assert "[sandbox key](https://docs.esportsodds.gg/docs/sandbox)" in answer
+    assert "fixed sample of past matches" in answer
 
 
 def test_the_faq_answers_what_a_call_costs_correctly() -> None:
