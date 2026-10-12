@@ -119,7 +119,13 @@ def test_an_unknown_429_code_with_a_long_wait_is_not_retried() -> None:
 
 
 @pytest.mark.parametrize(
-    "code", ["quota_exceeded", "trial_quota_exceeded", "trial_endpoint_quota_exceeded"]
+    "code",
+    [
+        "quota_exceeded",
+        "trial_quota_exceeded",
+        "trial_endpoint_quota_exceeded",
+        "bulk_quota_exceeded",
+    ],
 )
 def test_a_quota_error_is_raised_at_once_without_sleeping(code: str) -> None:
     # Retry-After on a quota 429 is the time to the end of the month: two weeks here. Sleeping it
@@ -133,6 +139,18 @@ def test_a_quota_error_is_raised_at_once_without_sleeping(code: str) -> None:
     assert info.value.code == code
     assert info.value.retry_after == 1209600.0
     assert info.value.reset_at is not None
+    assert rig.sleeps == []
+    assert len(rig.transport.requests) == 1
+
+
+def test_a_sandbox_quota_error_is_raised_at_once_with_no_reset() -> None:
+    # A sandbox key's allowance never resets: the API sends no Retry-After and no X-Quota-Reset.
+    rig = make_rig(error(429, "sandbox_quota_exceeded"), page([]))
+    with pytest.raises(QuotaExceededError) as info:
+        rig.client.matches.list()
+    assert info.value.code == "sandbox_quota_exceeded"
+    assert info.value.retry_after is None
+    assert info.value.reset_at is None
     assert rig.sleeps == []
     assert len(rig.transport.requests) == 1
 

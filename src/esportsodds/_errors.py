@@ -127,11 +127,16 @@ class AuthenticationError(ApiError):
 
 
 class PermissionDeniedError(ApiError):
-    """403: the key is valid but may not do this."""
+    """403: the key is valid but may not do this (`forbidden`, or `sandbox_scope` when a sandbox key
+    asks for data outside its sample)."""
 
 
 class NotFoundError(ApiError):
-    """404: no such game, or no such resource."""
+    """404: no such game, or no such resource.
+
+    Also raised for a match id retired by a merge (status 308, code `match_merged`): the client does
+    not follow redirects, so read the surviving id from `headers.get("x-merged-into")` and store it.
+    """
 
 
 class InvalidRequestError(ApiError):
@@ -154,11 +159,14 @@ class RateLimitError(ApiError):
 
 
 class QuotaExceededError(ApiError):
-    """429: the account's request allowance is spent (`quota_exceeded`, or a legacy trial's
-    `trial_quota_exceeded` / `trial_endpoint_quota_exceeded`).
+    """429: the account's request allowance is spent (`quota_exceeded`, a legacy trial's
+    `trial_quota_exceeded` / `trial_endpoint_quota_exceeded`, a sandbox key's
+    `sandbox_quota_exceeded`, the public sample key's daily `sample_quota_exceeded`, or a plan's
+    monthly bulk-export allowance, `bulk_quota_exceeded`).
 
     Never retried: nothing changes until the quota resets, and a refused request is not counted,
-    so there is nothing to gain by trying again. See `reset_at`.
+    so there is nothing to gain by trying again. See `reset_at`. A sandbox key's allowance never
+    resets, so its error has no `reset_at` and no `retry_after`.
     """
 
     @property
@@ -191,12 +199,17 @@ ERROR_CODES: Mapping[str, type[ApiError]] = {
     "quota_exceeded": QuotaExceededError,
     "trial_quota_exceeded": QuotaExceededError,
     "trial_endpoint_quota_exceeded": QuotaExceededError,
+    "sandbox_quota_exceeded": QuotaExceededError,
+    "sample_quota_exceeded": QuotaExceededError,
+    "bulk_quota_exceeded": QuotaExceededError,
     "unknown_game": NotFoundError,
     "not_found": NotFoundError,
+    "match_merged": NotFoundError,
     "invalid_cursor": InvalidCursorError,
     "invalid_parameter": InvalidRequestError,
     "conflict": ConflictError,
     "forbidden": PermissionDeniedError,
+    "sandbox_scope": PermissionDeniedError,
     "internal_error": ServerError,
     "unavailable": ServiceUnavailableError,
 }

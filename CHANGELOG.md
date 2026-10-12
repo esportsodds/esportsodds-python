@@ -7,6 +7,28 @@ the API; the change will be listed here first.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-12
+
+### Changed
+
+- A match id retired by a merge keeps raising `NotFoundError` when the API answers it with `308`
+  and code `match_merged` instead of `404`, and the surviving id is then in
+  `err.headers.get("x-merged-into")`. The client still never follows redirects.
+
+### Added
+
+- An MCP (Model Context Protocol) server, so AI assistants can read the API as tools: run
+  `esportsodds mcp` (for example `uvx esportsodds mcp`) or `esportsodds-mcp`. 24 read-only tools,
+  one per read method, built from the methods themselves. List tools ask for 20 rows unless the
+  assistant sets `limit`. It serves clients of every MCP revision from 2024-11-05 to 2026-07-28,
+  uses only the standard library and reads `ESPORTSODDS_API_KEY`.
+- Two error codes reserved for sandbox keys: `sandbox_scope` (403) raises `PermissionDeniedError`,
+  and `sandbox_quota_exceeded` (429) raises `QuotaExceededError` at once, without retrying.
+- `bulk_quota_exceeded` (429), for a plan's monthly allowance on `matches.bulk()`, raises
+  `QuotaExceededError` at once, without retrying.
+- `sample_quota_exceeded` (429), reserved for the public sample key's daily allowance, raises
+  `QuotaExceededError` at once, without retrying.
+
 ## [0.2.0] - 2026-10-11
 
 ### Added

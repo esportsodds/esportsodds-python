@@ -50,8 +50,10 @@ CODE_TABLE: list[tuple[str, int, type[ApiError]]] = [
     ("invalid_api_key", 401, AuthenticationError),
     ("unauthorized", 401, AuthenticationError),
     ("forbidden", 403, PermissionDeniedError),
+    ("sandbox_scope", 403, PermissionDeniedError),
     ("not_found", 404, NotFoundError),
     ("unknown_game", 404, NotFoundError),
+    ("match_merged", 308, NotFoundError),
     ("invalid_parameter", 400, InvalidRequestError),
     ("invalid_cursor", 400, InvalidCursorError),
     ("conflict", 409, ConflictError),
@@ -59,6 +61,9 @@ CODE_TABLE: list[tuple[str, int, type[ApiError]]] = [
     ("quota_exceeded", 429, QuotaExceededError),
     ("trial_quota_exceeded", 429, QuotaExceededError),
     ("trial_endpoint_quota_exceeded", 429, QuotaExceededError),
+    ("sandbox_quota_exceeded", 429, QuotaExceededError),
+    ("sample_quota_exceeded", 429, QuotaExceededError),
+    ("bulk_quota_exceeded", 429, QuotaExceededError),
     ("internal_error", 500, ServerError),
     ("unavailable", 503, ServiceUnavailableError),
 ]
@@ -176,6 +181,17 @@ def test_an_unknown_code_keeps_its_code_and_uses_the_status_class() -> None:
     assert type(err) is InvalidRequestError
     assert err.code == "brand_new_code"
     assert err.message == "new thing"
+
+
+def test_a_retired_match_id_is_not_found_here_and_names_the_survivor() -> None:
+    # The API answers a match id retired by a merge with 308 `match_merged`. The client does not
+    # follow redirects (the key must never travel anywhere it was not sent), so this surfaces as the
+    # same NotFoundError a retired id raised before, with the surviving id in a header.
+    survivor = "00000000-0000-7000-8000-000000000002"
+    err = build(308, envelope("match_merged", "merged"), {"X-Merged-Into": survivor})
+    assert type(err) is NotFoundError
+    assert err.status == 308
+    assert err.headers.get("x-merged-into") == survivor
 
 
 def test_an_internal_only_code_falls_back_by_status() -> None:

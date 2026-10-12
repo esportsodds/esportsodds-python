@@ -29,6 +29,7 @@ from esportsodds._errors import ERROR_CODES
 from esportsodds._resources import DEFAULT_CHANGE_OVERLAP
 from esportsodds._routes import ROUTES
 from esportsodds._transport import TransportResponse, UrllibTransport
+from esportsodds.mcp import DEFAULT_LIST_LIMIT, SUPPORTED_VERSIONS, TOOLS
 
 from . import readme_blocks as rb
 from .conftest import BASE_URL, FAKE_KEY, FakeTransport, error, item, make_rig, page, reply
@@ -99,10 +100,29 @@ SECTION_ORDER = [
     "Errors",
     "Rate limits and retries",
     "WebSocket (match updates)",
+    "AI assistants (MCP)",
     "Examples",
     "FAQ",
     "Licence",
 ]
+
+
+def test_the_mcp_section_lists_every_tool_in_order_and_both_commands() -> None:
+    body = FLAT["AI assistants (MCP)"]
+    tools = body.split("The tools are", 1)[1]
+    assert re.findall(r"`([a-z]+_[a-z0-9_]+)`", tools) == [
+        key.replace(".", "_") for key, _ in TOOLS
+    ]
+    assert f"ask for {DEFAULT_LIST_LIMIT} rows" in body
+    assert "esportsodds-mcp" in body
+    # How the official MCP registry checks that this PyPI package is ours.
+    assert "<!-- mcp-name: io.github.esportsodds/esportsodds -->" in body
+    config = next(b for b in BLOCKS if b.section == "AI assistants (MCP)" and b.lang == "json")
+    server = json.loads(config.code)["mcpServers"]["esportsodds"]
+    assert [server["command"], *server["args"]] == ["uvx", "esportsodds", "mcp"]
+    assert list(server["env"]) == ["ESPORTSODDS_API_KEY"]
+    versions = re.findall(r"\d{4}-\d{2}-\d{2}", body.split("every MCP revision", 1)[1])
+    assert versions == [SUPPORTED_VERSIONS[-1], SUPPORTED_VERSIONS[0]]
 
 
 def test_the_sections_are_these_and_in_this_order() -> None:
@@ -422,6 +442,9 @@ def test_the_pagination_claims_hold() -> None:
 # --- errors ---------------------------------------------------------------------------------------
 
 #                        status  retried?  (the README's last column, as a rule)
+# A code the API sends with a status other than its class's usual one; its own README row shows it.
+CODE_STATUS = {"match_merged": 308}
+
 EXPECTED_STATUS = {
     "AuthenticationError": 401,
     "PermissionDeniedError": 403,
@@ -442,7 +465,8 @@ def errors_table() -> list[list[str]]:
 
 
 def test_the_errors_table_lists_every_exception_the_package_raises() -> None:
-    names = [rb.code_spans(r[0])[0] for r in errors_table()]
+    # In table order; a class with a second row for one code (NotFoundError) counts once.
+    names = list(dict.fromkeys(rb.code_spans(r[0])[0] for r in errors_table()))
     expected = [
         "AuthenticationError",
         "PermissionDeniedError",
@@ -487,13 +511,14 @@ def test_each_code_in_the_table_raises_the_exception_in_its_row_with_the_status_
         name = rb.code_spans(cells[0])[0]
         if name not in EXPECTED_STATUS:
             continue
-        assert cells[2] == str(EXPECTED_STATUS[name]), name
         for code in rb.code_spans(cells[1]):
-            rig = make_rig(error(EXPECTED_STATUS[name], code), max_retries=0)
+            status = CODE_STATUS.get(code, EXPECTED_STATUS[name])
+            assert cells[2] == str(status), (name, code)
+            rig = make_rig(error(status, code), max_retries=0)
             with pytest.raises(esportsodds.ApiError) as caught:
                 rig.client.matches.list()
             assert type(caught.value) is getattr(esportsodds, name), (name, code)
-            assert caught.value.status == EXPECTED_STATUS[name]
+            assert caught.value.status == status
             assert caught.value.code == code
             checked += 1
     # Every API code but the two legacy-trial ones (which the README leaves out), none skipped.
@@ -538,7 +563,8 @@ def test_the_retried_column_is_what_the_client_does() -> None:
 
 
 def test_a_server_error_is_retried_at_most_twice_however_high_max_retries_is() -> None:
-    assert "at most twice" in errors_table()[9][3]
+    server_row = next(r for r in errors_table() if rb.code_spans(r[0])[0] == "ServerError")
+    assert "at most twice" in server_row[3]
     rig = make_rig(*[error(500, "internal_error")] * 5, max_retries=10)
     with pytest.raises(esportsodds.ServerError):
         rig.client.matches.list()

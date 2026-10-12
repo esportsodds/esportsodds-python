@@ -199,13 +199,17 @@ branch on the class, or on `error.code`, never on `error.message`.
 | Exception | API `code` | Status | Retried automatically |
 | --- | --- | --- | --- |
 | `AuthenticationError` | `missing_api_key`, `invalid_api_key`, `unauthorized` | 401 | No |
-| `PermissionDeniedError` | `forbidden` | 403 | No |
+| `PermissionDeniedError` | `forbidden`, `sandbox_scope` | 403 | No |
 | `NotFoundError` | `not_found`, `unknown_game` | 404 | No |
+| `NotFoundError` | `match_merged` | 308 | No: a match id retired by a merge; store the surviving id from `err.headers.get("x-merged-into")` |
 | `InvalidRequestError` | `invalid_parameter` | 400 | No |
 | `InvalidCursorError` | `invalid_cursor` | 400 | No: start the walk again from the first page |
 | `ConflictError` | `conflict` | 409 | No |
 | `RateLimitError` | `rate_limited` | 429 | Yes, after the `Retry-After` the API sends |
 | `QuotaExceededError` | `quota_exceeded` | 429 | Never: nothing changes until the month resets |
+| `QuotaExceededError` | `sandbox_quota_exceeded` | 429 | Never: a sandbox key's allowance does not reset |
+| `QuotaExceededError` | `sample_quota_exceeded` | 429 | Never: the public sample key's daily allowance resets at 00:00 UTC |
+| `QuotaExceededError` | `bulk_quota_exceeded` | 429 | Never: a plan's monthly bulk-export allowance resets with the month; other calls still work |
 | `ServiceUnavailableError` | `unavailable` | 503 | Yes, after the `Retry-After` the API sends |
 | `ServerError` | `internal_error` | 500 | Yes, but at most twice |
 | `ApiError` | any other | other | Only 502 and 504 |
@@ -301,6 +305,47 @@ asyncio.run(watch(["00000000-0000-7000-8000-000000000001"]))
 - The server pings every 54 seconds; `websockets` answers for you.
 
 The [WebSocket guide](https://docs.esportsodds.gg/docs/live-data) lists every frame type.
+
+## AI assistants (MCP)
+
+The package includes an MCP (Model Context Protocol) server, so an AI assistant such as Claude or
+Cursor can answer questions from the API: a team's recent form, the vetoes of a match, a
+player's career figures. It runs on your machine, reads `ESPORTSODDS_API_KEY` and only reads data.
+Each tool call is one request against your allowance, and the list tools ask for 20 rows unless the
+assistant sets `limit`.
+
+Add it to your MCP client's configuration (Claude Desktop: `claude_desktop_config.json`; Cursor:
+`~/.cursor/mcp.json`). With uv installed, `uvx` fetches the package itself, so there is nothing
+else to set up:
+
+```json
+{
+  "mcpServers": {
+    "esportsodds": {
+      "command": "uvx",
+      "args": ["esportsodds", "mcp"],
+      "env": {"ESPORTSODDS_API_KEY": "eo_live_..."}
+    }
+  }
+}
+```
+
+Or `pip install esportsodds` and use `esportsodds-mcp` as the `command`, with no `args` (give its
+full path, from `which esportsodds-mcp`, if the client cannot find it). In Claude Code:
+
+```bash
+claude mcp add --transport stdio --env ESPORTSODDS_API_KEY="$ESPORTSODDS_API_KEY" esportsodds -- uvx esportsodds mcp
+```
+
+The tools are `matches_list`, `matches_get`, `matches_maps`, `matches_stats`, `matches_vetoes`,
+`matches_rounds`, `matches_lineups`, `odds_list`, `teams_list`, `teams_get`, `teams_h2h`,
+`teams_form`, `teams_maps`, `teams_results`, `teams_players`, `tournaments_list`,
+`tournaments_get`, `tournaments_teams`, `players_list`, `players_get`, `players_career`,
+`players_matches`, `rankings_list` and `maps_list`. Each is one row of the methods table above,
+with that method's arguments, and the server answers clients of every MCP revision from
+2024-11-05 to 2026-07-28.
+
+<!-- mcp-name: io.github.esportsodds/esportsodds -->
 
 ## Examples
 

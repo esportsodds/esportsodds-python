@@ -43,6 +43,10 @@ classifiers = [
 # `requests` or `httpx` a project already pins.
 dependencies = []
 
+[project.scripts]
+esportsodds-mcp = "esportsodds.mcp:main"
+esportsodds = "esportsodds.mcp:cli"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",

@@ -74,8 +74,8 @@ class Transport(Protocol):
 
 class _NoRedirects(urllib.request.HTTPRedirectHandler):
     """urllib would re-send every request header, `Authorization` included, to the redirect target
-    (whatever host that is). The API never redirects, so a 3xx is refused and surfaces as an
-    ordinary reply instead."""
+    (whatever host that is). The API redirects only a match id retired by a merge (308
+    `match_merged`), and even that is refused: a 3xx surfaces as an ordinary reply instead."""
 
     def redirect_request(self, *_args: Any, **_kwargs: Any) -> None:
         return None
