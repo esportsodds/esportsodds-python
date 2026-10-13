@@ -137,7 +137,9 @@ def test_quickstart(wire: Callable[..., FakeTransport], capsys: pytest.CaptureFi
         "2026-10-01T14:00:00Z Team A vs Team B",
         "2026-10-02T14:00:00Z Team C vs Team D",
     ]
-    assert transport.query(0) == {"status": "scheduled", "limit": "5"}
+    # Soonest first: the default order starts with the fixture furthest away, and this script
+    # calls itself "the next five scheduled matches".
+    assert transport.query(0) == {"status": "scheduled", "sort": "scheduled_at", "limit": "5"}
 
 
 def test_upcoming_with_odds(
@@ -158,6 +160,8 @@ def test_upcoming_with_odds(
         "    no market line yet",
         "49990 requests left this month",
     ]
+    # "Upcoming" has to mean the soonest fixtures: those are the ones a market line exists for.
+    assert transport.query(0) == {"status": "scheduled", "sort": "scheduled_at", "limit": "5"}
     assert transport.query(1) == {"match": ID_1, "latest": "1", "market": "match_winner"}
     assert transport.query(2)["match"] == match(2)["id"]
     assert len(transport.requests) == 3

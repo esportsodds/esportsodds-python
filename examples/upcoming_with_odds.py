@@ -13,7 +13,7 @@ from esportsodds import Client
 
 def main() -> None:
     client = Client()
-    for match in client.matches.list(status="scheduled", limit=5).data:
+    for match in client.matches.list(status="scheduled", sort="scheduled_at", limit=5).data:
         print(match["scheduled_at"], match["team_a_name"], "vs", match["team_b_name"])
         board = client.odds.list(match=match["id"], latest=True, market="match_winner")
         if not board.data:

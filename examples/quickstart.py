@@ -7,5 +7,5 @@ from esportsodds import Client
 
 client = Client()  # reads ESPORTSODDS_API_KEY from the environment
 
-for match in client.matches.list(status="scheduled", limit=5).data:
+for match in client.matches.list(status="scheduled", sort="scheduled_at", limit=5).data:
     print(match["scheduled_at"], match["team_a_name"], "vs", match["team_b_name"])

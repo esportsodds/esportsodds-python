@@ -291,6 +291,17 @@ def test_descriptions_come_from_the_docstrings_on_one_line_without_rst_quotes() 
         assert "\n" not in tool["description"]
 
 
+def test_the_match_list_tells_an_assistant_how_to_ask_for_upcoming_matches() -> None:
+    # An assistant asked "what is on next?" reads these descriptions and nothing else. The default
+    # order is newest first, so `status="scheduled"` alone returns the fixtures furthest away.
+    tool = tools_by_name()["matches_list"]
+    props = tool["inputSchema"]["properties"]
+    assert "furthest away" in tool["description"]
+    assert 'sort="scheduled_at"' in tool["description"]
+    assert "soonest first" in props["sort"]["description"]
+    assert 'sort="scheduled_at"' in props["status"]["description"]
+
+
 def test_a_description_keeps_the_docstring_lines_that_wrap() -> None:
     has = tools_by_name()["matches_list"]["inputSchema"]["properties"]["has"]["description"]
     assert has.startswith("Only matches that carry all of these sub-resources, for example")

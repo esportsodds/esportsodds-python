@@ -166,8 +166,12 @@ class Matches(_Namespace):
     ) -> Page:
         """One page of matches, newest fixture first.
 
+        That order starts a list of scheduled matches with the fixture furthest away. For the
+        next matches to be played, pass ``status="scheduled", sort="scheduled_at"``.
+
         Args:
-            status: ``scheduled``, ``live``, ``completed`` or ``cancelled``.
+            status: ``scheduled``, ``live``, ``completed`` or ``cancelled``. With ``scheduled``,
+                also pass ``sort="scheduled_at"`` to get the next fixtures, not the furthest away.
             tournament: Only this tournament's matches (id).
             team: Only this team's matches (id).
             date_from: Scheduled on or after this day (UTC, inclusive).
@@ -176,8 +180,9 @@ class Matches(_Namespace):
                 ``["rounds", "depth"]``.
             changed_since: Only matches whose ``changed_at`` is at or after this instant; the
                 change feed (prefer `iter_changes`, which also handles the overlap).
-            sort: ``-scheduled_at`` (default), ``scheduled_at``, ``changed_at`` or
-                ``-changed_at``. A cursor is tied to the sort it came from.
+            sort: ``-scheduled_at`` (default, newest first), ``scheduled_at`` (oldest first,
+                which for scheduled matches is soonest first), ``changed_at`` or ``-changed_at``.
+                A cursor is tied to the sort it came from.
             limit: Page size (default 100, maximum 500).
             cursor: ``next_cursor`` from the previous page; omit for the first.
         """

@@ -188,7 +188,7 @@ def test_the_quickstart_runs_and_prints_the_fixtures(wire: Callable[..., FakeTra
     ]
     assert transport.requests[0].method == "GET"
     assert transport.path(0) == "/v1/cs2/matches"
-    assert transport.query(0) == {"status": "scheduled", "limit": "5"}
+    assert transport.query(0) == {"status": "scheduled", "sort": "scheduled_at", "limit": "5"}
     assert transport.requests[0].headers["Authorization"] == f"Bearer {FAKE_KEY}"
     assert transport.requests[0].url.startswith("https://api.esportsodds.gg/")
 
@@ -793,7 +793,7 @@ def test_the_asyncio_answer_runs(wire: Callable[..., FakeTransport]) -> None:
     exec(compile(wrapped, "<README.md>", "exec"), scope)  # noqa: S102 - the README's own snippet
     result = asyncio.run(scope["_faq"](rig.client))
     assert result.data[0]["id"] == row(1)["id"]
-    assert rig.transport.query(0) == {"status": "scheduled", "limit": "10"}
+    assert rig.transport.query(0) == {"status": "completed", "limit": "10"}
 
 
 def faq() -> dict[str, str]:

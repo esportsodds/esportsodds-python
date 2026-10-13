@@ -7,6 +7,17 @@ the API; the change will be listed here first.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-13
+
+### Fixed
+
+- The quickstart, `examples/upcoming_with_odds.py` and the README asked for scheduled matches in the
+  default order, newest first, which starts with the fixture furthest away. They now pass
+  `sort="scheduled_at"`, so "the next five scheduled matches" are the next five to be played.
+- `matches.list` says so in its documentation, and so does the `matches_list` tool an AI assistant
+  reads through the MCP server: for upcoming matches, pass `status="scheduled"` with
+  `sort="scheduled_at"`. No behaviour change: the client sends exactly what you ask for.
+
 ## [0.3.1] - 2026-10-12
 
 ### Changed

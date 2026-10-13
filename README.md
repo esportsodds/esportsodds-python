@@ -26,7 +26,7 @@ from esportsodds import Client
 
 client = Client()  # reads ESPORTSODDS_API_KEY from the environment
 
-for match in client.matches.list(status="scheduled", limit=5).data:
+for match in client.matches.list(status="scheduled", sort="scheduled_at", limit=5).data:
     print(match["scheduled_at"], match["team_a_name"], "vs", match["team_b_name"])
 ```
 
@@ -37,6 +37,10 @@ for match in client.matches.list(status="scheduled", limit=5).data:
 
 Every call returns what the API sent, as ordinary dicts and lists. A list call returns a `Page`
 (`page.data`, `page.next_cursor`, `page.has_more`, `page.meta`); a call for one thing returns a dict.
+
+Matches come newest first unless you say otherwise, which is what you want for results. For
+scheduled matches that order starts with the fixture furthest away, so the quickstart passes
+`sort="scheduled_at"` to get the next ones to be played.
 
 ## Your API key and the plan
 
@@ -90,7 +94,7 @@ teams, players and tournaments, the slug.
 
 | Call | Endpoint | Returns | What it gives you |
 | --- | --- | --- | --- |
-| `client.matches.list()` | `GET /v1/{game}/matches` | `Page` | Fixtures and results, newest first; filter by `status`, `tournament`, `team`, dates and `has`. |
+| `client.matches.list()` | `GET /v1/{game}/matches` | `Page` | Fixtures and results, newest first; filter by `status`, `tournament`, `team`, dates and `has`, order with `sort`. |
 | `client.matches.bulk()` | `GET /v1/{game}/matches/bulk` | `Page` | Matches with their maps, stats and more embedded (`include=`), 25 per request. |
 | `client.matches.get(match)` | `GET /v1/{game}/matches/{id}` | `dict` | One match; `include=` embeds teams, tournament, odds or sub-resources. |
 | `client.matches.maps(match)` | `GET /v1/{game}/matches/{id}/maps` | `Page` | Map-by-map results. |
@@ -389,7 +393,7 @@ carries up to 25 matches with their detail, is also one request. A walker (`iter
 async code, run a call in a thread:
 
 ```python
-matches = await asyncio.to_thread(client.matches.list, status="scheduled", limit=10)
+matches = await asyncio.to_thread(client.matches.list, status="completed", limit=10)
 ```
 
 **Can I use another HTTP library?** Yes. Pass `transport=` any object with a
