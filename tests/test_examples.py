@@ -91,6 +91,7 @@ def test_the_expected_scripts_are_there() -> None:
         "follow_changes.py",
         "handle_errors.py",
         "quickstart.py",
+        "sandbox_tour.py",
         "team_report.py",
         "upcoming_with_odds.py",
         "watch_matches.py",
@@ -240,6 +241,130 @@ def test_team_report_for_a_team_that_does_not_exist(
     out, code = run_script("team_report.py", "nope", "--opponent", "team-b", capsys=capsys)
     assert code == 1
     assert out == "no such team; check the slug\n"
+
+
+EVENT = "00000000-0000-7000-8000-0000000000e1"
+
+
+def sandbox_results() -> TransportResponse:
+    played = {"status": "completed", "tournament_name": "Event One"}
+    return page(
+        [
+            match(1, score_a=1, score_b=3, stage="Playoffs", format="bo5",
+                  data_available={"maps": False}, **played),
+            match(2, score_a=2, score_b=0, stage=None, format="bo3",
+                  data_available={"maps": True}, **played),
+        ]
+    )  # fmt: skip
+
+
+def sandbox_detail() -> TransportResponse:
+    c, d = "00000000-0000-7000-8000-0000000000c1", "00000000-0000-7000-8000-0000000000d1"
+    p1, p2, p3, p4 = (f"00000000-0000-7000-8000-00000000010{n}" for n in range(1, 5))
+    return item(
+        match(
+            2,
+            score_a=2,
+            score_b=0,
+            team_a={"id": c, "name": "Team C"},
+            team_b={"id": d, "name": "Team D"},
+            vetoes=[
+                {"order": 1, "team_id": c, "choice_type": "ban", "map_name": "de_dust2"},
+                {"order": 2, "team_id": d, "choice_type": "ban", "map_name": "de_inferno"},
+                {"order": 3, "team_id": c, "choice_type": "pick", "map_name": "de_nuke"},
+                {"order": 4, "team_id": None, "choice_type": "decider", "map_name": "de_ancient"},
+            ],
+            maps=[
+                {"map_number": 1, "map_name": "de_nuke", "score_a": 13, "score_b": 10},
+                {"map_number": 2, "map_name": "de_ancient", "score_a": 13, "score_b": 7},
+            ],
+            stats=[  # whole-match rows have no map_number; per-map rows must not be summed in
+                {"player_id": p1, "map_number": None, "kills": 30, "deaths": 20},
+                {"player_id": p2, "map_number": None, "kills": 41, "deaths": 25},
+                {"player_id": p3, "map_number": None, "kills": 35, "deaths": 28},
+                {"player_id": p4, "map_number": None, "kills": 12, "deaths": 30},
+                {"player_id": p4, "map_number": 1, "kills": 99, "deaths": 1},
+            ],
+            players=[
+                {"id": p1, "nickname": "player-1", "real_name": "Not Shown"},
+                {"id": p2, "nickname": "player-2", "real_name": "Not Shown"},
+                {"id": p3, "nickname": "player-3", "real_name": "Not Shown"},
+                {"id": p4, "nickname": "player-4", "real_name": "Not Shown"},
+            ],
+        )
+    )
+
+
+def test_sandbox_tour(
+    wire: Callable[..., FakeTransport], capsys: pytest.CaptureFixture[str]
+) -> None:
+    transport = wire(sandbox_results(), sandbox_detail())
+    out, code = run_script("sandbox_tour.py", EVENT, capsys=capsys)
+    assert code == 0
+    assert out.splitlines() == [
+        "Event One, latest results:",
+        "  2026-10-01  Team A 1-3 Team B  Playoffs, bo5",
+        "  2026-10-02  Team C 2-0 Team D  bo3",
+        "",
+        "Team C 2-0 Team D in depth:",
+        "  veto: Team C ban de_dust2, Team D ban de_inferno, Team C pick de_nuke, "
+        "decider de_ancient",
+        "  map 1: de_nuke 13-10",
+        "  map 2: de_ancient 13-7",
+        "  most kills: player-2 41, player-3 35, player-1 30",
+    ]
+    assert "Not Shown" not in out  # a nickname, never a real name
+    assert transport.path(0) == "/v1/cs2/matches"
+    assert transport.query(0) == {"tournament": EVENT, "status": "completed", "limit": "5"}
+    # The first result with map data is the one followed, in one request with what it needs.
+    assert transport.path(1) == f"/v1/cs2/matches/{ID_2}"
+    assert transport.query(1) == {"include": "teams,vetoes,maps,stats,players"}
+
+
+def test_the_requests_sandbox_tour_says_it_makes_are_the_ones_it_makes(
+    wire: Callable[..., FakeTransport], capsys: pytest.CaptureFixture[str]
+) -> None:
+    promised = requests_the_docstring_promises("sandbox_tour.py", r"(\w+) requests in all")
+    transport = wire(sandbox_results(), sandbox_detail())
+    run_script("sandbox_tour.py", EVENT, capsys=capsys)
+    assert len(transport.requests) == promised == 2
+
+
+def test_sandbox_tour_names_the_sample_when_the_event_is_outside_it(
+    wire: Callable[..., FakeTransport], capsys: pytest.CaptureFixture[str]
+) -> None:
+    refusal = "a sandbox key reads only a fixed sample of past matches: the events X and Y."
+    transport = wire(error(403, "sandbox_scope", refusal))
+    out, code = run_script("sandbox_tour.py", EVENT, capsys=capsys)
+    assert code == 1
+    assert out == f"{refusal}\n"  # the API's own words name the events that work
+    assert len(transport.requests) == 1
+
+
+def test_sandbox_tour_for_an_event_with_no_results(
+    wire: Callable[..., FakeTransport], capsys: pytest.CaptureFixture[str]
+) -> None:
+    transport = wire(page([]))
+    out, code = run_script("sandbox_tour.py", EVENT, capsys=capsys)
+    assert code == 1
+    assert out == "no completed matches for that event\n"
+    assert len(transport.requests) == 1
+
+
+def test_sandbox_tour_when_no_result_has_map_data(
+    wire: Callable[..., FakeTransport], capsys: pytest.CaptureFixture[str]
+) -> None:
+    played = {"status": "completed", "tournament_name": "Event One", "score_a": 2, "score_b": 1}
+    transport = wire(page([match(1, data_available={"maps": False}, **played)]))
+    out, code = run_script("sandbox_tour.py", EVENT, capsys=capsys)
+    assert code == 0
+    assert out.splitlines() == [
+        "Event One, latest results:",
+        "  2026-10-01  Team A 2-1 Team B",
+        "",
+        "none of these has map data yet",
+    ]
+    assert len(transport.requests) == 1
 
 
 def test_backfill_writes_json_lines_and_removes_its_cursor_when_done(

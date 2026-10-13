@@ -887,7 +887,15 @@ def test_the_examples_table_lists_exactly_the_scripts_in_the_folder() -> None:
     listed.sort()
     present = sorted(p.name for p in (rb.ROOT / "examples").glob("*.py"))
     assert listed == present
-    assert len(listed) == 7
+    assert len(listed) == 8
+
+
+def test_a_sandbox_key_is_pointed_at_a_first_call_inside_its_sample() -> None:
+    # The quickstart asks for scheduled matches, which no sandbox key can read (403 sandbox_scope),
+    # so the paragraph that offers the sandbox key must hand over the script that does work.
+    intro = SECTIONS["Install"]
+    assert "sandbox key" in intro
+    assert f"({REPO_URL}/blob/main/examples/sandbox_tour.py)" in intro
 
 
 def test_the_licence_section_matches_the_licence_file() -> None:

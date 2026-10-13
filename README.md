@@ -17,7 +17,10 @@ pip install esportsodds
 Python 3.10 or newer. No dependencies.
 
 No subscription yet? A free [sandbox key](https://docs.esportsodds.gg/docs/sandbox) reads a fixed
-sample of past matches, so you can build against real responses first.
+sample of past matches, so you can build against real responses first. The quickstart below asks
+for upcoming matches, which are outside the sample, so with a sandbox key start with
+[`sandbox_tour.py`](https://github.com/esportsodds/esportsodds-python/blob/main/examples/sandbox_tour.py)
+and a tournament id from the guide.
 
 ## Quickstart
 
@@ -365,6 +368,7 @@ runnable scripts. Each reads `ESPORTSODDS_API_KEY`.
 | Script | What it does |
 | --- | --- |
 | [`quickstart.py`](https://github.com/esportsodds/esportsodds-python/blob/main/examples/quickstart.py) | The quickstart above. |
+| [`sandbox_tour.py`](https://github.com/esportsodds/esportsodds-python/blob/main/examples/sandbox_tour.py) | An event's latest results, then one match's veto, maps and top players. Works on a sandbox key. |
 | [`upcoming_with_odds.py`](https://github.com/esportsodds/esportsodds-python/blob/main/examples/upcoming_with_odds.py) | Upcoming matches with their current market line. |
 | [`team_report.py`](https://github.com/esportsodds/esportsodds-python/blob/main/examples/team_report.py) | A team's form, head-to-head record and ratings. |
 | [`backfill_matches.py`](https://github.com/esportsodds/esportsodds-python/blob/main/examples/backfill_matches.py) | A resumable bulk pull of completed matches to a JSON Lines file. |

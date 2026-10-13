@@ -7,6 +7,14 @@ the API; the change will be listed here first.
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-10-13
+
+### Added
+
+- `examples/sandbox_tour.py`: an event's latest results, then one match's veto, maps and top players,
+  in two requests. It works on a sandbox key, whose sample does not include the upcoming matches the
+  quickstart asks for; the README now says so where it offers the sandbox key.
+
 ## [0.3.2] - 2026-10-13
 
 ### Fixed
