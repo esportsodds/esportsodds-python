@@ -302,6 +302,20 @@ def test_the_match_list_tells_an_assistant_how_to_ask_for_upcoming_matches() -> 
     assert 'sort="scheduled_at"' in props["status"]["description"]
 
 
+def test_an_assistant_is_sent_to_q_to_find_an_id_from_a_name() -> None:
+    # A slug is the exact spelling, so guessing one from a name fails whenever the guess differs,
+    # and each failed call spends a request. The instructions and the three list tools say `q`.
+    tools = tools_by_name()
+    for name in ("teams_list", "players_list", "tournaments_list"):
+        q = tools[name]["inputSchema"]["properties"]["q"]["description"]
+        assert q.startswith("Search by "), name
+        assert "2 to 100 characters" in q, name
+    server = mcp.Server(client_factory=Client)
+    reply = result_of(server.handle(request("initialize", {"protocolVersion": "2025-11-25"})))
+    assert "`teams_list` with `q`" in reply["instructions"]
+    assert "`teams_list` with `slug`" not in reply["instructions"]
+
+
 def test_a_description_keeps_the_docstring_lines_that_wrap() -> None:
     has = tools_by_name()["matches_list"]["inputSchema"]["properties"]["has"]["description"]
     assert has.startswith("Only matches that carry all of these sub-resources, for example")

@@ -7,6 +7,15 @@ the API; the change will be listed here first.
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-14
+
+### Fixed
+
+- The MCP server's instructions, the text an AI assistant reads first, still told it to find a team,
+  player or tournament from a name with the `slug` filter, which has to match exactly. They now send it
+  to `q`, the name search added in 0.4.0, so one call finds a team from part of its name instead of
+  guessing a spelling. No behaviour change: the client sends exactly what you ask for.
+
 ## [0.4.0] - 2026-10-14
 
 ### Added

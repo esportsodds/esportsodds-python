@@ -74,8 +74,9 @@ TOOLS: tuple[tuple[str, str], ...] = (
 INSTRUCTIONS = (
     "esportsodds.gg CS2 (Counter-Strike 2) match data: matches with per-map scores, vetoes, rounds "
     "and player stats; teams, players, tournaments, rankings and league-wide map figures; and a "
-    "de-vigged market line. Ids are UUIDs. Teams, players and tournaments also take a slug, and a "
-    "list tool finds an id from a name (for example `teams_list` with `slug`). List tools return "
+    "de-vigged market line. Ids are UUIDs. Teams, players and tournaments also take a slug in "
+    "place of an id. To find one from a name, give its list tool `q`, which matches part of a name "
+    "(for example `teams_list` with `q`); `slug` has to match exactly. List tools return "
     f"{DEFAULT_LIST_LIMIT} rows unless you set `limit`. Every tool call is one API request against "
     "the key's allowance, so prefer one well-filtered call to many."
 )
