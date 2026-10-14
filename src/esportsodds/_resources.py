@@ -667,6 +667,7 @@ class Teams(_Namespace):
         self,
         *,
         slug: str | None = None,
+        q: str | None = None,
         region: str | None = None,
         sort: str | None = None,
         limit: int | None = None,
@@ -676,6 +677,8 @@ class Teams(_Namespace):
 
         Args:
             slug: Exact slug match (returns the one team, or an empty page).
+            q: Search by name, 2 to 100 characters, case-insensitive: matches a team's name, short
+                name, slug or alternate name.
             region: One circuit region, by full name: ``Europe``, ``North America``,
                 ``South America``, ``Asia``, ``CIS``, ``Oceania`` or ``Africa``.
             sort: ``name`` (default) or ``slug``; prefix ``-`` to reverse.
@@ -683,13 +686,14 @@ class Teams(_Namespace):
             cursor: ``next_cursor`` from the previous page.
         """
         return self._c._page(
-            "teams.list", None, slug=slug, region=region, sort=sort, limit=limit, cursor=cursor
+            "teams.list", None, slug=slug, q=q, region=region, sort=sort, limit=limit, cursor=cursor
         )
 
     def pages(
         self,
         *,
         slug: str | None = None,
+        q: str | None = None,
         region: str | None = None,
         sort: str | None = None,
         limit: int | None = None,
@@ -700,7 +704,7 @@ class Teams(_Namespace):
         size = _page_size(limit, ROUTES["teams.list"])
 
         def fetch(after: str | None) -> Page:
-            return self.list(slug=slug, region=region, sort=sort, limit=size, cursor=after)
+            return self.list(slug=slug, q=q, region=region, sort=sort, limit=size, cursor=after)
 
         return walk_pages(fetch, cursor=cursor, max_pages=max_pages)
 
@@ -708,6 +712,7 @@ class Teams(_Namespace):
         self,
         *,
         slug: str | None = None,
+        q: str | None = None,
         region: str | None = None,
         sort: str | None = None,
         limit: int | None = None,
@@ -718,6 +723,7 @@ class Teams(_Namespace):
         return iter_rows(
             self.pages(
                 slug=slug,
+                q=q,
                 region=region,
                 sort=sort,
                 limit=limit,
@@ -901,6 +907,7 @@ class Tournaments(_Namespace):
         self,
         *,
         slug: str | None = None,
+        q: str | None = None,
         status: str | None = None,
         tier: str | None = None,
         event_type: str | None = None,
@@ -913,7 +920,9 @@ class Tournaments(_Namespace):
 
         Args:
             slug: Exact slug match.
-            status: ``upcoming``, ``ongoing`` or ``finished``.
+            q: Search by name, 2 to 100 characters, case-insensitive: matches a tournament's name
+                or slug.
+            status: ``upcoming``, ``ongoing``, ``finished`` or ``cancelled``.
             tier: One prestige tier, ``S`` (highest) down to ``C``.
             event_type: ``lan`` or ``online``.
             region: One circuit region, by full name (for example ``Europe``).
@@ -925,6 +934,7 @@ class Tournaments(_Namespace):
             "tournaments.list",
             None,
             slug=slug,
+            q=q,
             status=status,
             tier=tier,
             event_type=event_type,
@@ -938,6 +948,7 @@ class Tournaments(_Namespace):
         self,
         *,
         slug: str | None = None,
+        q: str | None = None,
         status: str | None = None,
         tier: str | None = None,
         event_type: str | None = None,
@@ -953,6 +964,7 @@ class Tournaments(_Namespace):
         def fetch(after: str | None) -> Page:
             return self.list(
                 slug=slug,
+                q=q,
                 status=status,
                 tier=tier,
                 event_type=event_type,
@@ -968,6 +980,7 @@ class Tournaments(_Namespace):
         self,
         *,
         slug: str | None = None,
+        q: str | None = None,
         status: str | None = None,
         tier: str | None = None,
         event_type: str | None = None,
@@ -981,6 +994,7 @@ class Tournaments(_Namespace):
         return iter_rows(
             self.pages(
                 slug=slug,
+                q=q,
                 status=status,
                 tier=tier,
                 event_type=event_type,
@@ -1014,6 +1028,7 @@ class Players(_Namespace):
         self,
         *,
         slug: str | None = None,
+        q: str | None = None,
         team: IdLike | None = None,
         role: str | None = None,
         ids: Ids | None = None,
@@ -1025,6 +1040,8 @@ class Players(_Namespace):
 
         Args:
             slug: Exact slug match.
+            q: Search by nickname, 2 to 100 characters, case-insensitive: matches a player's
+                nickname or slug.
             team: Only this team's roster (id).
             role: One in-game role: ``AWP``, ``IGL``, ``Lurker``, ``Rifler`` or ``Support``
                 (exact, case-sensitive; only some players have one on file).
@@ -1037,6 +1054,7 @@ class Players(_Namespace):
             "players.list",
             None,
             slug=slug,
+            q=q,
             team=team,
             role=role,
             ids=ids,
@@ -1049,6 +1067,7 @@ class Players(_Namespace):
         self,
         *,
         slug: str | None = None,
+        q: str | None = None,
         team: IdLike | None = None,
         role: str | None = None,
         ids: Ids | None = None,
@@ -1062,7 +1081,7 @@ class Players(_Namespace):
 
         def fetch(after: str | None) -> Page:
             return self.list(
-                slug=slug, team=team, role=role, ids=ids, sort=sort, limit=size, cursor=after
+                slug=slug, q=q, team=team, role=role, ids=ids, sort=sort, limit=size, cursor=after
             )
 
         return walk_pages(fetch, cursor=cursor, max_pages=max_pages)
@@ -1071,6 +1090,7 @@ class Players(_Namespace):
         self,
         *,
         slug: str | None = None,
+        q: str | None = None,
         team: IdLike | None = None,
         role: str | None = None,
         ids: Ids | None = None,
@@ -1083,6 +1103,7 @@ class Players(_Namespace):
         return iter_rows(
             self.pages(
                 slug=slug,
+                q=q,
                 team=team,
                 role=role,
                 ids=ids,

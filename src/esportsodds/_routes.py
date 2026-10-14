@@ -111,7 +111,7 @@ _TABLE: tuple[Route, ...] = (
     Route("ws_token", "mintWsToken", "POST", f"{_G}/ws-token", (), "item"),
     Route(
         "teams.list", "listTeams", "GET", f"{_G}/teams",
-        ("slug", "region", "sort", "limit", "cursor"), "page", page_max=500,
+        ("slug", "q", "region", "sort", "limit", "cursor"), "page", page_max=500,
     ),
     Route("teams.get", "getTeam", "GET", f"{_G}/teams/{{id}}", ("include", "rank"), "item"),
     Route("teams.h2h", "getHeadToHead", "GET", f"{_G}/teams/{{id}}/h2h", ("opponent",), "item"),
@@ -147,7 +147,7 @@ _TABLE: tuple[Route, ...] = (
     Route("teams.players", "listTeamPlayers", "GET", f"{_G}/teams/{{id}}/players", (), "item"),
     Route(
         "tournaments.list", "listTournaments", "GET", f"{_G}/tournaments",
-        ("slug", "status", "tier", "event_type", "region", "year", "limit", "cursor"),
+        ("slug", "q", "status", "tier", "event_type", "region", "year", "limit", "cursor"),
         "page", page_max=500,
     ),
     Route("tournaments.get", "getTournament", "GET", f"{_G}/tournaments/{{id}}", (), "item"),
@@ -157,7 +157,7 @@ _TABLE: tuple[Route, ...] = (
     ),
     Route(
         "players.list", "listPlayers", "GET", f"{_G}/players",
-        ("slug", "team", "role", "ids", "sort", "limit", "cursor"), "page", page_max=500,
+        ("slug", "q", "team", "role", "ids", "sort", "limit", "cursor"), "page", page_max=500,
     ),
     Route("players.get", "getPlayer", "GET", f"{_G}/players/{{id}}", ("include", "rank"), "item"),
     Route("players.career", "getPlayerCareer", "GET", f"{_G}/players/{{id}}/stats", (), "item"),

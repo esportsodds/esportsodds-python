@@ -150,10 +150,10 @@ CASES = [
     # teams
     Case(
         "teams.list",
-        lambda c: c.teams.list(slug="team-a", region="Europe", sort="-name", limit=3),
+        lambda c: c.teams.list(slug="team-a", q="team", region="Europe", sort="-name", limit=3),
         "GET",
         "/v1/cs2/teams",
-        {"slug": "team-a", "region": "Europe", "sort": "-name", "limit": "3"},
+        {"slug": "team-a", "q": "team", "region": "Europe", "sort": "-name", "limit": "3"},
         "page",
     ),
     Case(
@@ -249,6 +249,7 @@ CASES = [
         "tournaments.list",
         lambda c: c.tournaments.list(
             slug="event-a",
+            q="event",
             status="finished",
             tier="S",
             event_type="lan",
@@ -260,6 +261,7 @@ CASES = [
         "/v1/cs2/tournaments",
         {
             "slug": "event-a",
+            "q": "event",
             "status": "finished",
             "tier": "S",
             "event_type": "lan",
@@ -289,12 +291,19 @@ CASES = [
     Case(
         "players.list",
         lambda c: c.players.list(
-            slug="player-a", team=TEAM, role="AWP", ids=[PLAYER, MATCH], sort="nickname", limit=2
+            slug="player-a",
+            q="player",
+            team=TEAM,
+            role="AWP",
+            ids=[PLAYER, MATCH],
+            sort="nickname",
+            limit=2,
         ),
         "GET",
         "/v1/cs2/players",
         {
             "slug": "player-a",
+            "q": "player",
             "team": TEAM,
             "role": "AWP",
             "ids": f"{PLAYER},{MATCH}",
@@ -487,6 +496,7 @@ SAMPLES: dict[str, tuple[Any, str]] = {
     "latest": (True, "1"),
     "market": ("match_winner", "match_winner"),
     "slug": ("some-slug", "some-slug"),
+    "q": ("some name", "some name"),
     "region": ("Europe", "Europe"),
     "rank": (True, "1"),
     "opponent": ("other-team", "other-team"),

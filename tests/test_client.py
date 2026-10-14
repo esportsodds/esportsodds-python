@@ -247,10 +247,10 @@ def test_standard_headers() -> None:
 
 def test_the_user_agent_names_only_this_package() -> None:
     # It carries no key and no machine details.
-    assert __version__ == "0.3.3"
+    assert __version__ == "0.4.0"
     rig = make_rig(page([]))
     rig.client.coverage.list()
-    assert headers_of(rig.transport.requests[0])["user-agent"] == "esportsodds-python/0.3.3"
+    assert headers_of(rig.transport.requests[0])["user-agent"] == "esportsodds-python/0.4.0"
 
 
 def test_the_default_timeout_and_the_bulk_floor() -> None:

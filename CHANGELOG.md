@@ -7,6 +7,16 @@ the API; the change will be listed here first.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-14
+
+### Added
+
+- `q` on `teams.list`, `tournaments.list` and `players.list`, and on their `pages` and `iter`: search by
+  name instead of guessing a slug, for example `client.teams.list(q="navi")`. It is case-insensitive and
+  takes 2 to 100 characters. Teams match on name, short name, slug and alternate names, players on nickname
+  and slug, tournaments on name and slug. The MCP tools `teams_list`, `players_list` and
+  `tournaments_list` take it too, so an assistant can look a name up.
+
 ## [0.3.3] - 2026-10-13
 
 ### Added

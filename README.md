@@ -109,7 +109,7 @@ teams, players and tournaments, the slug.
 | `client.matches.lineups(match)` | `GET /v1/{game}/matches/{id}/lineups` | `Page` | Each team's listed roster before the match. |
 | `client.matches.streams(match)` | `GET /v1/{game}/matches/{id}/streams` | `Page` | The channels broadcasting a match. |
 | `client.odds.list()` | `GET /v1/{game}/odds` | `Page` | The derived market line, as history or as the current board. |
-| `client.teams.list()` | `GET /v1/{game}/teams` | `Page` | Every team, alphabetically. |
+| `client.teams.list()` | `GET /v1/{game}/teams` | `Page` | Every team, alphabetically; find one by name with `q`. |
 | `client.teams.get(team)` | `GET /v1/{game}/teams/{id}` | `dict` | One team. |
 | `client.teams.h2h(team, opponent=...)` | `GET /v1/{game}/teams/{id}/h2h` | `dict` | The head-to-head record between two teams. |
 | `client.teams.form(team)` | `GET /v1/{game}/teams/{id}/form` | `Page` | Recent completed results, newest first. |
@@ -121,10 +121,10 @@ teams, players and tournaments, the slug.
 | `client.teams.rivals(team)` | `GET /v1/{game}/teams/{id}/rivals` | `Page` | The opponents a team meets most, with the head-to-head and rating gap. |
 | `client.teams.roster_history(team)` | `GET /v1/{game}/teams/{id}/roster-history` | `Page` | The five players fielded in each recent match, with roster changes. |
 | `client.teams.players(team)` | `GET /v1/{game}/teams/{id}/players` | `dict` | The players in the team's newest match with stats, with their last-12-month figures. |
-| `client.tournaments.list()` | `GET /v1/{game}/tournaments` | `Page` | Every tournament, newest first. |
+| `client.tournaments.list()` | `GET /v1/{game}/tournaments` | `Page` | Every tournament, newest first; search by name with `q`. |
 | `client.tournaments.get(tournament)` | `GET /v1/{game}/tournaments/{id}` | `dict` | One tournament. |
 | `client.tournaments.teams(tournament)` | `GET /v1/{game}/tournaments/{id}/teams` | `Page` | The participating teams, by seed. |
-| `client.players.list()` | `GET /v1/{game}/players` | `Page` | Every player, alphabetically by nickname. |
+| `client.players.list()` | `GET /v1/{game}/players` | `Page` | Every player, alphabetically by nickname; search by nickname with `q`. |
 | `client.players.get(player)` | `GET /v1/{game}/players/{id}` | `dict` | One player. |
 | `client.players.career(player)` | `GET /v1/{game}/players/{id}/stats` | `dict` | A player's career totals and averages. |
 | `client.players.performance(player)` | `GET /v1/{game}/players/{id}/performance` | `dict` | Last-12-month figures over recorded maps, each with its percentile among players with a page. |
