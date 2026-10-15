@@ -456,43 +456,53 @@ class Matches(_Namespace):
 
     def get(self, match: IdLike, *, include: Multi | None = None) -> dict[str, Any]:
         """One match. The ``data_available`` flags say which sub-resources exist for it.
+        Pass ``include`` to get the ones you need back in this same request.
 
         Args:
             match: The match's id, which is always a UUID.
             include: Embed related resources: ``teams`` (adds ``team_a``/``team_b``),
-                ``tournament`` and ``odds`` (the latest line per outcome), or sub-resources.
+                ``tournament`` and ``odds`` (the latest line per outcome), or the match's own
+                ``maps``, ``stats``, ``vetoes``, ``rounds``, ``depth``, ``lineups``, ``streams``
+                and ``players``, each as its own route returns it. Every one saves a request.
         """
         return self._c._item("matches.get", _ident(match, "match"), include=include)
 
     def maps(self, match: IdLike) -> Page:
-        """Per-map scores for one match."""
+        """Per-map scores for one match. Also in the match itself: get the match with
+        ``include="maps"`` to save this request."""
         return self._c._page("matches.maps", _ident(match, "match"))
 
     def stats(self, match: IdLike) -> Page:
-        """Per-player performance stats for one match."""
+        """Per-player performance stats for one match. Also in the match itself: get the match
+        with ``include="stats"`` to save this request."""
         return self._c._page("matches.stats", _ident(match, "match"))
 
     def vetoes(self, match: IdLike) -> Page:
-        """The map veto (pick and ban) sequence for one match."""
+        """The map veto (pick and ban) sequence for one match. Also in the match itself: get the
+        match with ``include="vetoes"`` to save this request."""
         return self._c._page("matches.vetoes", _ident(match, "match"))
 
     def rounds(self, match: IdLike) -> Page:
-        """Round-by-round team stats for one match."""
+        """Round-by-round team stats for one match. Also in the match itself: get the match with
+        ``include="rounds"`` to save this request."""
         return self._c._page("matches.rounds", _ident(match, "match"))
 
     def depth(self, match: IdLike) -> dict[str, Any]:
         """Per-player depth breakdowns for one match: ``weapons``, ``grenades``, ``hitgroups``,
-        ``duels`` and ``flashes``. A match without depth returns every group as an empty list."""
+        ``duels`` and ``flashes``. A match without depth returns every group as an empty list.
+        Also in the match itself: get the match with ``include="depth"`` to save this request."""
         return self._c._item("matches.depth", _ident(match, "match"))
 
     def lineups(self, match: IdLike) -> Page:
         """Pre-match roster snapshots. A snapshot is a listed roster (substitutes included), not
-        a confirmed starting five; the players who played are in `stats`."""
+        a confirmed starting five; the players who played are in `stats`. Also in the match
+        itself: get the match with ``include="lineups"`` to save this request."""
         return self._c._page("matches.lineups", _ident(match, "match"))
 
     def streams(self, match: IdLike) -> Page:
         """Broadcast channels for a match in progress, official first. Empty before a match starts
-        and after it ends, so do not keep these rows as an archive."""
+        and after it ends, so do not keep these rows as an archive. Also in the match itself:
+        get the match with ``include="streams"`` to save this request."""
         return self._c._page("matches.streams", _ident(match, "match"))
 
     def history(

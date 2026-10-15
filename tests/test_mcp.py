@@ -8,6 +8,7 @@ No test here touches the network: the client underneath is wired to `FakeTranspo
 
 from __future__ import annotations
 
+import inspect
 import io
 import json
 import os
@@ -283,7 +284,7 @@ def test_every_parameter_has_a_json_type_and_a_description() -> None:
 
 def test_descriptions_come_from_the_docstrings_on_one_line_without_rst_quotes() -> None:
     tools = tools_by_name()
-    assert tools["matches_maps"]["description"] == "Per-map scores for one match."
+    assert tools["matches_maps"]["description"].startswith("Per-map scores for one match.")
     status = tools["matches_list"]["inputSchema"]["properties"]["status"]["description"]
     assert "`scheduled`" in status
     for tool in tools.values():
@@ -314,6 +315,30 @@ def test_an_assistant_is_sent_to_q_to_find_an_id_from_a_name() -> None:
     reply = result_of(server.handle(request("initialize", {"protocolVersion": "2025-11-25"})))
     assert "`teams_list` with `q`" in reply["instructions"]
     assert "`teams_list` with `slug`" not in reply["instructions"]
+
+
+def test_an_assistant_is_sent_to_include_to_get_a_whole_match_in_one_request() -> None:
+    # Each sub-resource tool is a request of its own, and the same rows ride along on the match
+    # request. An assistant reads these descriptions and nothing else, and the free sandbox key
+    # allows 2,000 requests in all: a match fetched in seven calls instead of one spends that
+    # allowance seven times faster.
+    tools = tools_by_name()
+    get = tools["matches_get"]
+    include = get["inputSchema"]["properties"]["include"]["description"]
+    for name in ("maps", "stats", "vetoes", "rounds", "depth", "lineups", "streams", "players"):
+        assert f"`{name}`" in include, name
+    assert "`include`" in get["description"]
+    for name in ("maps", "stats", "vetoes", "rounds", "lineups"):
+        tip = f'get the match with `include="{name}"`'
+        assert tip in tools[f"matches_{name}"]["description"], name
+
+
+def test_the_two_methods_without_a_tool_say_it_too() -> None:
+    from esportsodds._resources import Matches
+
+    for name in ("depth", "streams"):
+        doc = inspect.getdoc(getattr(Matches, name)) or ""
+        assert f'get the match with ``include="{name}"``' in doc, name
 
 
 def test_a_description_keeps_the_docstring_lines_that_wrap() -> None:

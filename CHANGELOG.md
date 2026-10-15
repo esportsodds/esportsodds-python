@@ -7,6 +7,16 @@ the API; the change will be listed here first.
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-15
+
+### Changed
+
+- The text an AI assistant reads for the match tools now says that a match's `maps`, `stats`, `vetoes`,
+  `rounds`, `depth`, `lineups`, `streams` and `players` can come back inside the match request itself,
+  with `include`. Before, `matches_get` said only "or sub-resources", so an assistant that wanted a whole
+  match made one request per part, and the free sandbox key allows 2,000 requests in all. The same sentence
+  is on each sub-resource method's docstring. No behaviour change: the client sends exactly what you ask for.
+
 ## [0.4.1] - 2026-10-14
 
 ### Fixed
