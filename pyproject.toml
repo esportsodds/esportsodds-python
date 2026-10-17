@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "esportsodds"
 dynamic = ["version"]
-description = "Python client for the esportsodds.gg CS2 (Counter-Strike 2) match data and stats API."
+description = "Python client and MCP server for the esportsodds.gg CS2 (Counter-Strike 2) match data and stats API."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -24,6 +24,9 @@ keywords = [
     "match-data",
     "api-client",
     "sdk",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

@@ -7,6 +7,14 @@ the API; the change will be listed here first.
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-10-17
+
+### Changed
+
+- The package summary now says "Python client and MCP server", and the keywords include `mcp`, `mcp-server` and
+  `model-context-protocol`, so a search for an MCP server for CS2 data finds the package. Metadata only: no code
+  changed and the client sends exactly what you ask for.
+
 ## [0.4.2] - 2026-10-15
 
 ### Changed
