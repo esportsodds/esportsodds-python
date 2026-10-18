@@ -7,6 +7,12 @@ the API; the change will be listed here first.
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-10-18
+
+### Changed
+
+- The README's bulk-export example is now bounded (`date_from` a week back and `max_pages=4`) and says what `max_pages` does, because the unbounded form walks the whole history, one request per page. Documentation only: no code changed.
+
 ## [0.4.3] - 2026-10-17
 
 ### Changed

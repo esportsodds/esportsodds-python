@@ -180,9 +180,18 @@ for match in client.matches.iter(status="completed", date_from="2026-09-01"):
 sub-resources you ask for embedded, and one request against your allowance per page.
 
 ```python
-for match in client.matches.iter_bulk(status="completed", include=["maps", "stats"]):
+from datetime import date, timedelta
+
+week_ago = date.today() - timedelta(days=7)
+rows = client.matches.iter_bulk(
+    status="completed", date_from=week_ago, include=["maps", "stats"], max_pages=4
+)
+for match in rows:
     print(match["id"], len(match["maps"]))
 ```
+
+`max_pages` stops the walk after that many requests. Without it, `iter_bulk` keeps going until the filter runs out, which for a wide
+one is the whole history, one request per page.
 
 A busy moment answers `503` with a short `Retry-After`; the client waits and retries for you.
 
