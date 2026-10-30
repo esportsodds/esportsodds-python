@@ -18,7 +18,7 @@ from typing import Any
 
 import pytest
 
-from esportsodds import AuthenticationError, Client, Page
+from esportsodds import AuthenticationError, Client, Page, QuotaExceededError
 from esportsodds._routes import ROUTES
 from esportsodds._transport import _NoRedirects
 
@@ -193,6 +193,29 @@ def test_close_releases_only_what_a_custom_transport_holds() -> None:
 
 
 # --- the bulk export ------------------------------------------------------------------------------
+
+
+def test_a_refused_bulk_allowance_is_raised_as_a_quota_error_and_never_retried() -> None:
+    claim(
+        KEY_SECTION,
+        "past that the API answers `429` with `bulk_quota_exceeded`, which raises "
+        "`QuotaExceededError` without retrying and leaves every other call working.",
+    )
+    # What the API sends on the 429: the end of the month as Retry-After and as X-Quota-Reset.
+    rig = make_rig(
+        error(
+            429, "bulk_quota_exceeded", retry_after="1209600", x_quota_reset="2026-12-01T00:00:00Z"
+        ),
+        page([row()]),
+        page([row()]),
+    )
+    with pytest.raises(QuotaExceededError) as caught:
+        rig.client.matches.bulk()
+    assert caught.value.code == "bulk_quota_exceeded"
+    assert rig.sleeps == []
+    assert len(rig.transport.requests) == 1  # not retried
+    # ... and a call to another endpoint on the same client still goes through.
+    assert rig.client.matches.list().data[0]["id"] == row()["id"]
 
 
 def test_the_methods_table_says_how_big_a_bulk_page_is() -> None:

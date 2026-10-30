@@ -16,9 +16,13 @@ pip install esportsodds
 
 Python 3.10 or newer. No dependencies.
 
+Try it first, with no account: set `ESPORTSODDS_API_KEY` to the public sample key `eo_sample_public`, which
+reads a fixed sample of past matches. It is shared by everyone and rate-limited per network address.
+For evaluation; [our Terms](https://esportsodds.gg/terms) apply.
+
 No subscription yet? A free [sandbox key](https://docs.esportsodds.gg/docs/sandbox) reads a fixed
 sample of past matches, so you can build against real responses first. The quickstart below asks
-for upcoming matches, which are outside the sample, so with a sandbox key start with
+for upcoming matches, which are outside the sample, so with either key start with
 [`sandbox_tour.py`](https://github.com/esportsodds/esportsodds-python/blob/main/examples/sandbox_tour.py)
 and a tournament id from the guide.
 
@@ -47,13 +51,19 @@ scheduled matches that order starts with the fixture furthest away, so the quick
 
 ## Your API key and the plan
 
-There is one plan: **$49 a month for 50,000 requests**, per account, counted per calendar month
-(UTC) and paid up front. There is no trial. A free [sandbox key](https://docs.esportsodds.gg/docs/sandbox)
-reads a fixed sample of past matches, up to 2,000 requests in total, with no card; current data needs
-the plan. Past the 50,000, requests get a `429` with the code `quota_exceeded` until the month
-resets, and this client raises `QuotaExceededError` without retrying (retrying cannot help). A spent
+There are two plans, billed monthly or yearly and paid up front: **Standard is $99 a month for 50,000 requests**
+and **Pro is $299 a month for 150,000 requests**. A year costs ten months: $990 a year for Standard and
+$2,990 a year for Pro, two months free. Requests are counted per account, per calendar month (UTC), across every
+key the account owns. There is no trial. A free [sandbox key](https://docs.esportsodds.gg/docs/sandbox)
+reads a fixed sample of past matches, up to 2,000 requests in total, with no card; it is not a plan, and
+current data needs one. Past your plan's requests, calls get a `429` with the code `quota_exceeded` until the
+month resets, and this client raises `QuotaExceededError` without retrying (retrying cannot help). A spent
 sandbox key gets `sandbox_quota_exceeded`, raised the same way (it never resets), and a request
 outside its sample raises `PermissionDeniedError` (`sandbox_scope`, not counted).
+
+The bulk export (`matches.bulk()` and the walkers built on it) has one more limit. On a Standard account that first subscribed on or after 30 October 2026 you may make up to 250 bulk-export requests a month; past that the API
+answers `429` with `bulk_quota_exceeded`, which raises `QuotaExceededError` without retrying and leaves every
+other call working. Pro has no bulk limit, and a Standard account that first subscribed before that date has none either.
 
 Create a key in your account after you [subscribe](https://esportsodds.gg/pricing), then keep it
 out of your code:
@@ -191,7 +201,9 @@ for match in rows:
 ```
 
 `max_pages` stops the walk after that many requests. Without it, `iter_bulk` keeps going until the filter runs out, which for a wide
-one is the whole history, one request per page.
+one is the whole history, one request per page. On a Standard subscription with the 250-a-month limit, a long walk
+stops with `bulk_quota_exceeded` when the month's requests are used. Walk with `pages_bulk()` and save each page's
+`next_cursor`, and the walk resumes with `cursor=` after the month resets.
 
 A busy moment answers `503` with a short `Retry-After`; the client waits and retries for you.
 
@@ -257,8 +269,9 @@ except RateLimitError as error:
 
 ## Rate limits and retries
 
-Two limits apply: a per-key token bucket (20 requests a second sustained, bursts of 100) and the
-monthly allowance of 50,000 requests per account, shared by all of an account's keys. After every
+Two limits apply: a per-key token bucket (20 requests a second sustained, bursts of 100) and
+the monthly allowance of your plan, 50,000 requests on Standard or 150,000 on Pro, per account,
+shared by all of an account's keys. After every
 call, `client.last_response.rate_limit` has the budget the API reported:
 
 ```python
@@ -393,13 +406,13 @@ affiliated with or endorsed by Valve or any stats site.
 **Why not scrape?** Scraping breaks whenever a page changes and many sites forbid it. With this API
 you build without scraping HLTV or anyone else: you call stable, documented endpoints instead.
 
-**Is there a free tier?** Not for current data. There is no trial; the plan is $49 a month for
-50,000 requests, paid up front. A free [sandbox key](https://docs.esportsodds.gg/docs/sandbox) reads a
+**Is there a free tier?** Not for current data. There is no trial; Standard is $99 a month for 50,000
+requests and Pro is $299 a month for 150,000, paid up front. A free [sandbox key](https://docs.esportsodds.gg/docs/sandbox) reads a
 fixed sample of past matches, and the [public demo](https://demo.esportsodds.gg) shows real responses
 without an account.
 
-**What does a call cost?** One request against the 50,000, whatever it returns. A bulk page, which
-carries up to 25 matches with their detail, is also one request. A walker (`iter`, `pages`,
+**What does a call cost?** One request against your monthly allowance, whatever it returns. A bulk page, which
+carries up to 25 matches with their detail, is also one request (and, on a Standard account that first subscribed on or after 30 October 2026, one of its 250 bulk-export requests a month). A walker (`iter`, `pages`,
 `iter_bulk`, `iter_changes`) costs one request per page it fetches. The WebSocket costs none.
 
 **Does it work with asyncio?** The client is synchronous and safe to share between threads. From

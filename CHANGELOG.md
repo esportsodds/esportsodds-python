@@ -7,6 +7,20 @@ the API; the change will be listed here first.
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-10-30
+
+### Added
+
+- The README has a "try it first" block for the public sample key, `eo_sample_public`: it needs no account, reads a
+  fixed sample of past matches, is shared by everyone and is rate-limited per network address. For evaluation;
+  [our Terms](https://esportsodds.gg/terms) apply. Documentation only: no code changed.
+
+### Changed
+
+- The README now describes the two plans (Standard and Pro), yearly billing, and the bulk-export limit of 250 requests
+  a month on a Standard account that first subscribed on or after 30 October 2026. It also says what a
+  `bulk_quota_exceeded` reply means for a long bulk walk. Documentation only: no code changed.
+
 ## [0.4.4] - 2026-10-18
 
 ### Changed

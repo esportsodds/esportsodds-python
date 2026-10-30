@@ -142,14 +142,30 @@ def test_every_python_block_parses() -> None:
     assert parsed >= 9
 
 
+PUBLIC_SAMPLE_KEY = "eo_sample_public"
+
+
 def test_no_block_hides_a_real_key_or_a_real_id() -> None:
     for block in BLOCKS:
-        for match in re.findall(r"eo_(?:live|test)_([A-Za-z0-9]+)", block.code):
+        for match in re.findall(r"eo_(?:live|test|sandbox)_([A-Za-z0-9]+)", block.code):
             assert len(set(match)) <= 2, block.line
         for uuid in re.findall(
             r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", block.code
         ):
             assert uuid.startswith("00000000-0000-"), block.line
+
+
+def test_the_one_key_the_readme_prints_is_the_public_sample_key() -> None:
+    """The README is public: every key-shaped value is a placeholder (one repeated character),
+    except the public sample key, published on purpose. Exactly that value, nothing like it."""
+    keys = re.findall(r"eo_(?:live|test|sandbox|sample)_[A-Za-z0-9]+", TEXT)
+    tails = {key: key.split("_", 2)[2] for key in keys if key != PUBLIC_SAMPLE_KEY}
+    real = [key for key, tail in tails.items() if len(set(tail)) > 2]
+    assert real == [], real
+    assert PUBLIC_SAMPLE_KEY in keys
+    # No lookalike: the sample key is never a prefix of a longer value, nor shown in another case.
+    assert not re.search(r"eo_sample_public[A-Za-z0-9_]", TEXT)
+    assert not re.search(r"(?i)eo_sample_public", TEXT.replace(PUBLIC_SAMPLE_KEY, ""))
 
 
 # --- install --------------------------------------------------------------------------------------
@@ -169,6 +185,26 @@ def test_the_install_section_is_honest_about_pypi_and_names_the_python_floor() -
     assert marker in (0, 1)
     assert (git_install in body) == (marker == 1)
     assert 'requires-python = ">=3.10"' in (rb.ROOT / "pyproject.toml").read_text(encoding="utf-8")
+
+
+def test_a_try_it_first_block_precedes_the_quickstart_with_the_sample_key_and_notice() -> None:
+    body = FLAT["Install"]
+    block = body[body.index("Try it first") :]
+    block = block[: block.index("No subscription yet?")]
+    assert "Try it first, with no account:" in block
+    assert f"`{PUBLIC_SAMPLE_KEY}`" in block
+    assert "fixed sample of past matches" in block
+    assert "shared by everyone" in block
+    assert "rate-limited per network address" in block
+    # The notice, worded as given, with the Terms linked absolutely (PyPI shows the README away from
+    # the repo).
+    assert "For evaluation; [our Terms](https://esportsodds.gg/terms) apply." in block
+    # A short block (at most four lines in the file), without the words the sample key never gets.
+    raw = SECTIONS["Install"].split("Try it first")[1].split("No subscription yet?")[0]
+    assert len(raw.strip().splitlines()) <= 4
+    assert not re.search(r"(?i)\btrial\b|[\u2013\u2014]|risk[ -]?free|best value|urgent", block)
+    # The key is printed in the Install section only, ahead of the quickstart.
+    assert [name for name, text in SECTIONS.items() if PUBLIC_SAMPLE_KEY in text] == ["Install"]
 
 
 # --- the quickstart -------------------------------------------------------------------------------
@@ -219,9 +255,15 @@ def test_the_quickstart_is_the_first_example_script() -> None:
 # --- plan and key ---------------------------------------------------------------------------------
 
 
-def test_the_plan_is_stated_as_it_is_sold() -> None:
+def test_the_plans_are_stated_as_they_are_sold() -> None:
+    # The figures are held to models/quota.go by tests/contract/test_readme_compliance.py; this
+    # shipped test cannot read the monorepo, so it pins the sentence as written.
     body = FLAT["Your API key and the plan"]
-    assert "**$49 a month for 50,000 requests**" in body
+    assert "There are two plans" in body
+    assert "**Standard is $99 a month for 50,000 requests**" in body
+    assert "**Pro is $299 a month for 150,000 requests**" in body
+    assert "$990 a year for Standard and $2,990 a year for Pro, two months free" in body
+    assert "billed monthly or yearly" in body
     assert "per account" in body
     assert "calendar month (UTC)" in body
     assert "paid up front" in body
@@ -235,6 +277,19 @@ def test_the_plan_is_stated_as_it_is_sold() -> None:
     assert "`sandbox_quota_exceeded`" in body
     assert "`quota_exceeded`" in body
     assert "QuotaExceededError" in body
+    # The sandbox key is never a plan and never a trial.
+    assert "it is not a plan" in body
+    assert "free plan" not in body.lower()
+    assert "sandbox plan" not in body.lower()
+
+
+def test_the_bulk_allowance_of_a_new_standard_account_is_stated() -> None:
+    body = FLAT["Your API key and the plan"]
+    assert "a Standard account that first subscribed on or after 30 October 2026" in body
+    assert "up to 250 bulk-export requests a month" in body
+    assert "`bulk_quota_exceeded`" in body
+    assert "Pro has no bulk limit" in body
+    assert "a Standard account that first subscribed before that date has none either" in body
 
 
 # --- configuration --------------------------------------------------------------------------------
@@ -705,7 +760,10 @@ def test_retries_are_logged_at_info_on_the_esportsodds_logger(
 def test_the_budget_limits_quoted_are_the_ones_the_docs_state() -> None:
     body = FLAT["Rate limits and retries"]
     assert "20 requests a second sustained, bursts of 100" in body
-    assert "50,000 requests per account" in body
+    assert (
+        "the monthly allowance of your plan, 50,000 requests on Standard or 150,000 on Pro" in body
+    )
+    assert "per account, shared by all of an account's keys" in body
 
 
 # --- websocket ------------------------------------------------------------------------------------
@@ -809,10 +867,10 @@ FAQ_OPENINGS = {
     "Is this an official API?": "No. It is not an official ",
     "Why not scrape?": "Scraping breaks whenever a page changes and many sites forbid it.",
     "Is there a free tier?": (
-        "Not for current data. There is no trial; the plan is $49 a month for 50,000 requests, "
-        "paid up front."
+        "Not for current data. There is no trial; Standard is $99 a month for 50,000 requests "
+        "and Pro is $299 a month for 150,000, paid up front."
     ),
-    "What does a call cost?": "One request against the 50,000, whatever it returns.",
+    "What does a call cost?": "One request against your monthly allowance, whatever it returns.",
     "Does it work with asyncio?": "The client is synchronous and safe to share between threads.",
     "Can I use another HTTP library?": (
         "Yes. Pass `transport=` any object with a `send(TransportRequest) -> TransportResponse` "
