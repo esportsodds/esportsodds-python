@@ -317,6 +317,21 @@ def test_an_assistant_is_sent_to_q_to_find_an_id_from_a_name() -> None:
     assert "`teams_list` with `slug`" not in reply["instructions"]
 
 
+def test_an_assistant_on_a_sample_key_is_told_what_a_sandbox_scope_refusal_means() -> None:
+    # A newcomer installs the server from the registry with the public sample key, and an
+    # assistant's first calls (a team by name, the default match list) all answer 403
+    # `sandbox_scope`. The message names the events that work and the refusal is not counted, but
+    # an assistant that is told so up front recovers in one call. The shipped text holds no real
+    # id (the mirror hygiene scan rejects one).
+    server = mcp.Server(client_factory=Client)
+    reply = result_of(server.handle(request("initialize", {"protocolVersion": "2025-11-25"})))
+    text = reply["instructions"]
+    assert "`sandbox_scope`" in text
+    assert "`matches_list` with `tournament`" in text
+    assert "not counted" in text
+    assert not re.search(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", text)
+
+
 def test_an_assistant_is_sent_to_include_to_get_a_whole_match_in_one_request() -> None:
     # Each sub-resource tool is a request of its own, and the same rows ride along on the match
     # request. An assistant reads these descriptions and nothing else, and the free sandbox key

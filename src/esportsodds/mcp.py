@@ -78,7 +78,10 @@ INSTRUCTIONS = (
     "place of an id. To find one from a name, give its list tool `q`, which matches part of a name "
     "(for example `teams_list` with `q`); `slug` has to match exactly. List tools return "
     f"{DEFAULT_LIST_LIMIT} rows unless you set `limit`. Every tool call is one API request against "
-    "the key's allowance, so prefer one well-filtered call to many."
+    "the key's allowance, so prefer one well-filtered call to many. The public sample key and a "
+    "sandbox key read only a fixed sample of past matches: any other call answers `sandbox_scope`, "
+    "which is not counted and whose message names the events that work, so call `matches_list` "
+    "with `tournament` set to one of them."
 )
 
 SERVER_INFO = {"name": "esportsodds", "title": "esportsodds.gg", "version": __version__}

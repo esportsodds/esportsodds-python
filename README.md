@@ -24,7 +24,8 @@ No subscription yet? A free [sandbox key](https://docs.esportsodds.gg/docs/sandb
 sample of past matches, so you can build against real responses first. The quickstart below asks
 for upcoming matches, which are outside the sample, so with either key start with
 [`sandbox_tour.py`](https://github.com/esportsodds/esportsodds-python/blob/main/examples/sandbox_tour.py)
-and a tournament id from the guide.
+and a tournament id from the guide. Any request outside the sample raises `PermissionDeniedError`
+(`sandbox_scope`), and its message names the events that work.
 
 ## Quickstart
 

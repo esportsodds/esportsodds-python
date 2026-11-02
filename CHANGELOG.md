@@ -7,6 +7,20 @@ the API; the change will be listed here first.
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-11-02
+
+### Changed
+
+- `client.maps.list()` and `client.maps.teams()` document the API's new `window="pool"`: only the retired maps, each over the
+  stretch it was last in the Active Duty pool, with that span on the row as `pool_from` and `pool_to`. Documentation only: no
+  code changed, and the client already sent whatever `window` you gave it. The API has served it since 2026-10-30.
+- The README says where to find an event id for the first run with the public sample key or a sandbox key: the
+  `sandbox_scope` error message names the events that work. Documentation only.
+- The MCP server's instructions tell an assistant what a `sandbox_scope` refusal means: the public sample key and a sandbox key
+  read only a fixed sample, any other call answers `sandbox_scope` (not counted) naming the events that work, so call
+  `matches_list` with `tournament` set to one of them. Before this, a first call for a team or the default match list on the
+  sample key was refused with no hint in the instructions. Text only: no tool, argument or request changed.
+
 ## [0.4.5] - 2026-10-30
 
 ### Added

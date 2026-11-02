@@ -426,6 +426,23 @@ CASES = [
         {"window": "12m", "era": "all", "limit": "50"},
         "page",
     ),
+    # window="pool": a retired map over the stretch it was last in the Active Duty pool.
+    Case(
+        "maps.list",
+        lambda c: c.maps.list(window="pool", era="cs2"),
+        "GET",
+        "/v1/cs2/maps",
+        {"window": "pool", "era": "cs2"},
+        "page",
+    ),
+    Case(
+        "maps.teams",
+        lambda c: c.maps.teams("overpass", window="pool", era="cs2"),
+        "GET",
+        "/v1/cs2/maps/overpass/teams",
+        {"window": "pool", "era": "cs2"},
+        "page",
+    ),
     Case("coverage.list", lambda c: c.coverage.list(), "GET", "/v1/cs2/coverage", {}, "page"),
     Case("model.metrics", lambda c: c.model.metrics(), "GET", "/v1/cs2/model/metrics", {}, "page"),
     # the probe
@@ -700,3 +717,18 @@ def test_a_map_name_is_checked_before_it_reaches_the_url() -> None:
     assert rig.transport.requests == []
     rig.client.maps.teams("de_mirage")
     assert rig.transport.path() == "/v1/cs2/maps/de_mirage/teams"
+
+
+def test_the_maps_docstrings_name_the_pool_window() -> None:
+    """A caller learns of ``window="pool"`` from the method they call, and which maps it is for."""
+    import inspect
+
+    from esportsodds import _resources
+
+    listing = inspect.getdoc(_resources.Maps.list) or ""
+    teams = inspect.getdoc(_resources.Maps.teams) or ""
+    assert '``"pool"``' in listing
+    assert "retired" in listing
+    assert "pool_from" in listing
+    assert '``"pool"``' in teams
+    assert "retired" in teams

@@ -1278,12 +1278,15 @@ class Maps(_Namespace):
 
     def list(self, *, window: str | None = None, era: str | None = None) -> Page:
         """Each competitive map's league-wide figures: maps played, average rounds, rounds played
-        and won on each side, and the bans and picks recorded in vetoes. Most played first. Read a
-        map's bans and picks against its own ``veto_matches``.
+        and won on each side, and the bans and picks recorded in vetoes. Most played first (with
+        ``window="pool"``, most recently retired first). Read a map's bans and picks against its own
+        ``veto_matches``.
 
         Args:
             window: A trailing span of whole months from ``"1m"`` to ``"12m"`` (default ``"6m"``);
-                there is no ``"all"``.
+                there is no ``"all"``. Or ``"pool"``: only the retired maps, each over the
+                stretch it was last in the Active Duty pool, with that span on the row as
+                ``pool_from`` and ``pool_to``. A map still in the pool is never in that list.
             era: ``cs2`` or ``all`` (the default).
         """
         return self._c._page("maps.list", None, window=window, era=era)
@@ -1303,8 +1306,9 @@ class Maps(_Namespace):
         Args:
             map: The map's name, such as ``"dust2"`` (the ``de_`` prefix is optional). An unknown
                 name raises `NotFoundError`.
-            window: A trailing span such as ``"6m"`` (the default; whole months up to ``"60m"``)
-                or ``"all"``.
+            window: A trailing span such as ``"6m"`` (the default; whole months up to ``"60m"``),
+                ``"all"``, or ``"pool"``: the stretch a retired map was last in the Active Duty
+                pool (a map still in it raises `InvalidRequestError`).
             era: ``cs2`` or ``all`` (the default).
             limit: How many teams to return.
         """
